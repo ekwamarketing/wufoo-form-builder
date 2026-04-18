@@ -37,7 +37,7 @@
     }
 
     function addInteractionListeners() {
-        const events = ['mousemove', 'scroll', 'touchstart', 'click'];
+        const events = ['mousemove', 'scroll', 'touchstart', 'click', 'keydown'];
 
         function handleInteraction() {
             if (!flatpickrLoaded) {
@@ -53,7 +53,7 @@
             document.addEventListener(event, handleInteraction, { passive: true });
         });
 
-        // Also load immediately if user focuses on a datepicker
+        // Also load immediately if user focuses on a datepicker (keyboard tab)
         document.addEventListener('focusin', function(e) {
             if (e.target.classList.contains('ekwa-datepicker') && !flatpickrLoaded) {
                 loadFlatpickr();
@@ -93,12 +93,24 @@
         // Let CSS handle the styling to maintain consistency
         datepicker.classList.add('ekwa-datepicker-placeholder');
 
-        // Add click listener to load Flatpickr immediately if clicked before interaction
-        datepicker.addEventListener('click', function() {
+        // Add click/focus listener to load Flatpickr immediately if interacted before lazy load
+        function loadOnInteraction() {
             if (!flatpickrLoaded) {
                 loadFlatpickr();
             }
-        }, { once: true });
+        }
+        datepicker.addEventListener('click', loadOnInteraction, { once: true });
+        datepicker.addEventListener('focus', loadOnInteraction, { once: true });
+
+        // Open calendar when user presses Enter, Space, or ArrowDown before flatpickr is loaded
+        datepicker.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!flatpickrLoaded) {
+                    loadFlatpickr();
+                }
+            }
+        });
     }
 
     function initializeFlatpickrInstances() {
@@ -118,6 +130,9 @@
         const disableFuture = datepicker.hasAttribute('data-disable-future') && datepicker.getAttribute('data-disable-future') === 'true';
         const disableWeekends = datepicker.hasAttribute('data-disable-weekends') && datepicker.getAttribute('data-disable-weekends') === 'true';
 
+        // Track whether calendar was opened via keyboard
+        var openedViaKeyboard = false;
+
         // Build Flatpickr configuration
         const config = {
             dateFormat: 'Y-m-d',
@@ -125,9 +140,74 @@
             clickOpens: true,
             altInput: true,
             altFormat: 'F j, Y',
-            disableMobile: true, // Force same input field on both mobile and desktop
+            disableMobile: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                var altInput = instance.altInput;
+                var calendarContainer = instance.calendarContainer;
+
+                if (altInput) {
+                    altInput.setAttribute('aria-label', datepicker.getAttribute('aria-label') || 'Select a date');
+                    if (datepicker.hasAttribute('aria-required')) {
+                        altInput.setAttribute('aria-required', datepicker.getAttribute('aria-required'));
+                    }
+                    altInput.setAttribute('role', 'combobox');
+                    altInput.setAttribute('aria-haspopup', 'dialog');
+                    altInput.setAttribute('aria-expanded', 'false');
+
+                    // Keyboard handler on the visible input
+                    altInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                            if (!instance.isOpen) {
+                                e.preventDefault();
+                                openedViaKeyboard = true;
+                                instance.open();
+                            }
+                        }
+                        if (e.key === 'Escape' && instance.isOpen) {
+                            e.preventDefault();
+                            instance.close();
+                        }
+                    });
+                }
+
+                // Make calendar container accessible
+                if (calendarContainer) {
+                    calendarContainer.setAttribute('role', 'dialog');
+                    calendarContainer.setAttribute('aria-label', 'Date picker calendar');
+
+                    // Full keyboard navigation inside the calendar
+                    calendarContainer.addEventListener('keydown', function(e) {
+                        handleCalendarKeydown(e, instance);
+                    });
+                }
+            },
+            onOpen: function(selectedDates, dateStr, instance) {
+                if (instance.altInput) {
+                    instance.altInput.setAttribute('aria-expanded', 'true');
+                }
+                // After a short delay, focus the selected/today day in the calendar
+                setTimeout(function() {
+                    focusCurrentDay(instance);
+                }, 50);
+            },
+            onClose: function(selectedDates, dateStr, instance) {
+                if (instance.altInput) {
+                    instance.altInput.setAttribute('aria-expanded', 'false');
+                }
+                // Return focus to the input when closing
+                if (openedViaKeyboard && instance.altInput) {
+                    instance.altInput.focus();
+                }
+                openedViaKeyboard = false;
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                // Re-focus a day after month changes
+                setTimeout(function() { focusCurrentDay(instance); }, 50);
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                setTimeout(function() { focusCurrentDay(instance); }, 50);
+            },
             onChange: function(selectedDates, dateStr, instance) {
-                // Custom validation after date selection
                 validateDateSelection(datepicker, selectedDates[0], instance);
             }
         };
@@ -146,7 +226,6 @@
         if (disableWeekends) {
             config.disable = [
                 function(date) {
-                    // Disable Saturday (6) and Sunday (0)
                     return (date.getDay() === 0 || date.getDay() === 6);
                 }
             ];
@@ -168,11 +247,193 @@
 
         // Remove placeholder class and ensure consistent styling after initialization
         datepicker.classList.remove('ekwa-datepicker-placeholder');
-
-        // Force CSS class to maintain styling
         datepicker.classList.add('ekwa-datepicker');
 
         flatpickrInstances.push(instance);
+    }
+
+    /**
+     * Focus the selected day, or today, or the first available day in the calendar.
+     */
+    function focusCurrentDay(instance) {
+        var cal = instance.calendarContainer;
+        if (!cal) return;
+
+        // Make all visible days focusable
+        var allDays = cal.querySelectorAll('.flatpickr-day:not(.flatpickr-disabled):not(.hidden):not(.prevMonthDay):not(.nextMonthDay)');
+        allDays.forEach(function(day) {
+            day.setAttribute('tabindex', '-1');
+            day.setAttribute('role', 'gridcell');
+        });
+
+        // Also label the days container as a grid
+        var daysContainer = cal.querySelector('.dayContainer');
+        if (daysContainer) {
+            daysContainer.setAttribute('role', 'grid');
+            daysContainer.setAttribute('aria-label', 'Calendar days');
+        }
+
+        // Try to focus: selected day > today > first available day
+        var target = cal.querySelector('.flatpickr-day.selected:not(.flatpickr-disabled)')
+            || cal.querySelector('.flatpickr-day.today:not(.flatpickr-disabled)')
+            || cal.querySelector('.flatpickr-day:not(.flatpickr-disabled):not(.hidden):not(.prevMonthDay):not(.nextMonthDay)');
+
+        if (target) {
+            target.setAttribute('tabindex', '0');
+            target.focus();
+        }
+    }
+
+    /**
+     * Handle keyboard events inside the open calendar.
+     */
+    function handleCalendarKeydown(e, instance) {
+        var cal = instance.calendarContainer;
+        var focused = document.activeElement;
+
+        // Only handle if focus is on a day cell
+        if (!focused || !focused.classList.contains('flatpickr-day')) {
+            // If Escape pressed anywhere in calendar, close it
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                instance.close();
+            }
+            return;
+        }
+
+        var allDays = Array.prototype.slice.call(
+            cal.querySelectorAll('.flatpickr-day:not(.hidden)')
+        );
+        var currentIndex = allDays.indexOf(focused);
+
+        switch (e.key) {
+            case 'ArrowRight':
+                e.preventDefault();
+                moveFocusToDay(allDays, currentIndex, 1, instance);
+                break;
+
+            case 'ArrowLeft':
+                e.preventDefault();
+                moveFocusToDay(allDays, currentIndex, -1, instance);
+                break;
+
+            case 'ArrowDown':
+                e.preventDefault();
+                moveFocusToDay(allDays, currentIndex, 7, instance);
+                break;
+
+            case 'ArrowUp':
+                e.preventDefault();
+                moveFocusToDay(allDays, currentIndex, -7, instance);
+                break;
+
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                if (!focused.classList.contains('flatpickr-disabled')) {
+                    focused.click();
+                    instance.close();
+                }
+                break;
+
+            case 'Escape':
+                e.preventDefault();
+                instance.close();
+                break;
+
+            case 'PageDown':
+                e.preventDefault();
+                if (e.shiftKey) {
+                    instance.changeYear(instance.currentYear + 1);
+                } else {
+                    instance.changeMonth(1, true);
+                }
+                break;
+
+            case 'PageUp':
+                e.preventDefault();
+                if (e.shiftKey) {
+                    instance.changeYear(instance.currentYear - 1);
+                } else {
+                    instance.changeMonth(-1, true);
+                }
+                break;
+
+            case 'Home':
+                e.preventDefault();
+                focusFirstDayOfMonth(cal);
+                break;
+
+            case 'End':
+                e.preventDefault();
+                focusLastDayOfMonth(cal);
+                break;
+
+            case 'Tab':
+                // Close calendar on Tab to allow natural focus movement
+                instance.close();
+                break;
+        }
+    }
+
+    /**
+     * Move focus by offset days, skipping disabled days.
+     * If offset goes beyond current month, change month.
+     */
+    function moveFocusToDay(allDays, currentIndex, offset, instance) {
+        var targetIndex = currentIndex + offset;
+
+        // If going beyond the visible days, change month
+        if (targetIndex < 0) {
+            instance.changeMonth(-1, true);
+            return; // onMonthChange will re-focus
+        }
+        if (targetIndex >= allDays.length) {
+            instance.changeMonth(1, true);
+            return; // onMonthChange will re-focus
+        }
+
+        var targetDay = allDays[targetIndex];
+
+        // Skip disabled days - try next in same direction
+        var step = offset > 0 ? 1 : -1;
+        var attempts = 0;
+        while (targetDay && targetDay.classList.contains('flatpickr-disabled') && attempts < 14) {
+            targetIndex += step;
+            if (targetIndex < 0 || targetIndex >= allDays.length) break;
+            targetDay = allDays[targetIndex];
+            attempts++;
+        }
+
+        if (targetDay && !targetDay.classList.contains('flatpickr-disabled')) {
+            // Reset previous tabindex
+            allDays.forEach(function(d) { d.setAttribute('tabindex', '-1'); });
+            targetDay.setAttribute('tabindex', '0');
+            targetDay.focus();
+        }
+    }
+
+    /**
+     * Focus the first available day of the current month.
+     */
+    function focusFirstDayOfMonth(cal) {
+        var day = cal.querySelector('.flatpickr-day:not(.flatpickr-disabled):not(.prevMonthDay):not(.nextMonthDay):not(.hidden)');
+        if (day) {
+            day.setAttribute('tabindex', '0');
+            day.focus();
+        }
+    }
+
+    /**
+     * Focus the last available day of the current month.
+     */
+    function focusLastDayOfMonth(cal) {
+        var days = cal.querySelectorAll('.flatpickr-day:not(.flatpickr-disabled):not(.prevMonthDay):not(.nextMonthDay):not(.hidden)');
+        if (days.length > 0) {
+            var last = days[days.length - 1];
+            last.setAttribute('tabindex', '0');
+            last.focus();
+        }
     }
 
     function validateDateSelection(datepicker, selectedDate, instance) {

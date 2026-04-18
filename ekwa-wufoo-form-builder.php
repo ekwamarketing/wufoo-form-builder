@@ -546,8 +546,10 @@ function ekwa_wufoo_form_input_render( $attributes ) {
         );
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     return sprintf(
-        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" %s %s%s />%s%s</div>',
+        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" aria-label="%s" %s %s %s%s />%s%s</div>',
         $label_html,
         $input_wrapper_start,
         $icon_in_input,
@@ -556,7 +558,9 @@ function ekwa_wufoo_form_input_render( $attributes ) {
         $field_id,
         $input_class,
         $placeholder,
+        esc_attr( $attributes['label'] ),
         $required,
+        $aria_required,
         $input_style,
         $mask_attributes,
         $input_wrapper_end,
@@ -635,14 +639,18 @@ function ekwa_wufoo_form_select_render( $attributes ) {
         );
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     return sprintf(
-        '<div class="form-select">%s%s%s<select id="%s" name="%s" %s %s required>%s</select>%s%s</div>',
+        '<div class="form-select">%s%s%s<select id="%s" name="%s" aria-label="%s" %s %s %s>%s</select>%s%s</div>',
         $label_html,
         $select_wrapper_start,
         $icon_in_select,
         $field_id,
         $field_id,
+        esc_attr( $attributes['label'] ),
         $required,
+        $aria_required,
         $select_style,
         $options_html,
         $select_wrapper_end,
@@ -719,16 +727,20 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
         $min_chars_data = sprintf('data-min-characters="%d"', $min_characters);
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     return sprintf(
-        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" rows="%d" %s %s %s %s></textarea>%s%s</div>',
+        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" aria-label="%s" rows="%d" %s %s %s %s %s></textarea>%s%s</div>',
         $label_html,
         $textarea_wrapper_start,
         $icon_in_textarea,
         $field_id,
         $field_id,
         $placeholder,
+        esc_attr( $attributes['label'] ),
         $rows,
         $required,
+        $aria_required,
         $minlength_attr,
         $min_chars_data,
         $textarea_style,
@@ -772,6 +784,8 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
         );
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     // Build radio buttons HTML
     $radio_buttons_html = '';
     foreach ( $options_array as $index => $option ) {
@@ -782,12 +796,13 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
 
         $radio_buttons_html .= sprintf(
             '<label for="%s" style="display: block; margin-bottom: 8px; cursor: pointer;">
-                <input type="radio" id="%s" name="%s" value="%s" %s %s style="margin-right: 8px;" />
+                <input type="radio" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-right: 8px;" />
                 %s
             </label>',
             $radio_id,
             $radio_id,
             $field_name,
+            esc_attr( $option ),
             esc_attr( $option ),
             $is_checked,
             $required,
@@ -797,12 +812,13 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
 
     return sprintf(
         '<div class="form-radio">
-            <fieldset style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
+            <fieldset role="radiogroup" %s style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
                 <legend style="padding: 0 10px;">%s%s</legend>
                 %s
             </fieldset>
             %s
         </div>',
+        $aria_required,
         $label,
         $required_indicator,
         $radio_buttons_html,
@@ -830,10 +846,12 @@ function ekwa_wufoo_form_checkbox_render( $attributes ) {
         );
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     return sprintf(
         '<div class="form-checkbox">
             <label for="%s" style="display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" id="%s" name="%s" value="%s" %s %s style="margin-right: 8px;" />
+                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s %s style="margin-right: 8px;" />
                 %s%s
             </label>
             %s
@@ -842,8 +860,10 @@ function ekwa_wufoo_form_checkbox_render( $attributes ) {
         $field_id,
         $field_id,
         $value,
+        esc_attr( $attributes['label'] ),
         $checked,
         $required,
+        $aria_required,
         $label,
         $required_indicator,
         $validation_html
@@ -900,12 +920,13 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
 
         $checkbox_buttons_html .= sprintf(
             '<label for="%s" style="display: block; margin-bottom: 8px; cursor: pointer;">
-                <input type="checkbox" id="%s" name="%s" value="%s" %s %s style="margin-right: 8px;" data-group="%s" />
+                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-right: 8px;" data-group="%s" />
                 %s
             </label>',
             $field_id,
             $field_id,
             $field_id, // Each checkbox has its own name
+            esc_attr( $option ),
             esc_attr( $option ),
             $is_checked,
             $required,
@@ -932,8 +953,11 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
         $legend_html = '';
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     $content_wrapper = sprintf(
-        '<fieldset style="%s">%s%s</fieldset>',
+        '<fieldset role="group" %s style="%s">%s%s</fieldset>',
+        $aria_required,
         $fieldset_style,
         $legend_html,
         $checkbox_buttons_html
@@ -1037,13 +1061,14 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $min_attr = !empty( $min_date ) ? sprintf( 'min="%s"', $min_date ) : '';
     $max_attr = !empty( $max_date ) ? sprintf( 'max="%s"', $max_date ) : '';
     $value_attr = !empty( $default_value ) ? sprintf( 'value="%s"', $default_value ) : '';
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
 
     return sprintf(
         '<div class="form-datepicker">
             %s
             %s
             %s
-            <input type="text" id="%s" name="%s" class="ekwa-datepicker" %s %s %s %s placeholder="%s" style="%s" readonly%s />
+            <input type="text" id="%s" name="%s" class="ekwa-datepicker" aria-label="%s" %s %s %s %s %s placeholder="%s" autocomplete="off" style="%s"%s />
             %s
             %s
         </div>',
@@ -1052,7 +1077,9 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
         $icon_in_input,
         $field_id,
         $field_id,
+        esc_attr( $attributes['label'] ),
         $required,
+        $aria_required,
         $min_attr,
         $max_attr,
         $value_attr,
@@ -1092,18 +1119,23 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
         $processed_text = str_replace( $link_text, $link_html, $privacy_text );
     }
 
+    $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+
     return sprintf(
         '<div class="form-privacy-checkbox">
-            <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4;">
-                <input type="checkbox" id="%s" name="%s" value="%s" %s style="margin-top: 2px; flex-shrink: 0;" />
+            <label for="%s" style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4;">
+                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-top: 2px; flex-shrink: 0;" />
                 <span>%s</span>
             </label>
             %s
         </div>',
         $field_id,
         $field_id,
+        $field_id,
         $value,
+        esc_attr( wp_strip_all_tags( $privacy_text ) ),
         $required,
+        $aria_required,
         $processed_text,
         $validation_html
     );
