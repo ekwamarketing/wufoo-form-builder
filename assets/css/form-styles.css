@@ -3,6 +3,19 @@
     margin: 0 auto;
 }
 
+/* Screen-reader only text — visually hidden but accessible */
+.ekwa-wufoo-form-builder .screen-reader-text {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 .ekwa-wufoo-form-builder form {
     padding: 20px;
     border: 1px solid #ddd;
@@ -33,8 +46,8 @@
 .form-datepicker input {
     height: 40px;
 }
- .form-datepicker input{
-    padding-left: 40px !important;
+ .form-datepicker .ekwawf-input-wrapper input{
+    padding-left: 35px !important;
  }
 .ekwa-wufoo-form-builder .wp-block-columns{
     margin: 0 !important;

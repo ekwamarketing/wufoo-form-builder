@@ -1,65 +1,178 @@
 /**
- * Flatpickr Datepicker Styles
- * Ensures consistent styling with other form fields
+ * Ekwa Vanilla Datepicker Styles
+ * Light, clean calendar UI — no external dependencies.
  */
 
-/* Base styling for datepicker input - consistent before and after Flatpickr */
+/* ── Input ─────────────────────────────────────────────────────────── */
+
 .ekwa-datepicker,
-.ekwa-datepicker-placeholder,
-.form-datepicker input,
-.form-datepicker input.flatpickr-input,
-.form-datepicker .flatpickr-input {
+.form-datepicker input[type="text"] {
     width: 100% !important;
     height: auto !important;
     line-height: 1.4 !important;
-    padding: 10px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
     font-size: 14px !important;
     background: #fff !important;
-    background-color: #fff !important;
     color: #333 !important;
     box-sizing: border-box !important;
     transition: border-color 0.3s ease !important;
-}
-
-/* Override any Flatpickr default styling that might conflict */
-.flatpickr-input[readonly],
-.form-datepicker input[readonly] {
-    background-color: #fff !important;
-    color: #333 !important;
     cursor: pointer !important;
 }
 
-/* Focus state for the input field */
-.ekwa-datepicker:focus,
-.ekwa-datepicker-placeholder:focus,
-.flatpickr-input:focus,
-.form-datepicker input:focus {
-    border-color: #0073aa !important;
-    box-shadow: 0 0 0 1px #0073aa !important;
-    outline: none !important;
-    background: #fff !important;
+.form-datepicker input[readonly] {
+    background-color: #fff !important;
     color: #333 !important;
 }
 
-/* Disabled state */
-.ekwa-datepicker:disabled,
-.ekwa-datepicker-placeholder:disabled,
-.flatpickr-input:disabled {
-    background-color: #f7f7f7 !important;
-    cursor: not-allowed !important;
-    opacity: 0.6 !important;
+.form-datepicker input:focus,
+.ekwa-datepicker:focus {
+    border-color: #0073aa !important;
+    box-shadow: 0 0 0 1px #0073aa !important;
+    outline: none !important;
 }
 
-/* Keyboard focus indicator for calendar day cells - outline only, no background override */
-.flatpickr-calendar .flatpickr-day:focus {
+/* ── Calendar container ────────────────────────────────────────────── */
+
+.ekwa-dp-calendar {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    margin-top: 4px;
+    width: 280px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+/* ── Header (prev / title / next) ──────────────────────────────────── */
+
+.ekwa-dp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.ekwa-dp-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #222;
+    user-select: none;
+}
+
+.ekwa-dp-prev,
+.ekwa-dp-next {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ekwa-dp-prev:hover,
+.ekwa-dp-next:hover {
+    background: #f5f5f5;
+    color: #222;
+}
+
+/* ── Day-of-week labels ────────────────────────────────────────────── */
+
+.ekwa-dp-dow {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.ekwa-dp-dow span {
+    font-size: 11px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+/* ── Days grid ─────────────────────────────────────────────────────── */
+
+.ekwa-dp-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.ekwa-dp-blank {
+    /* empty cells before the 1st */
+}
+
+.ekwa-dp-day {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+}
+
+.ekwa-dp-day:hover:not(.ekwa-dp-disabled):not(.ekwa-dp-selected) {
+    background: #f0f4ff;
+    color: #0073aa;
+}
+
+.ekwa-dp-day:focus {
     outline: 2px solid #0073aa;
     outline-offset: -2px;
     z-index: 1;
 }
 
-/* Form container adjustments */
+/* Today */
+.ekwa-dp-today {
+    font-weight: 700;
+    border: 1px solid #ccc;
+}
+
+/* Selected */
+.ekwa-dp-selected {
+    background: #0073aa !important;
+    color: #fff !important;
+    font-weight: 600;
+}
+
+/* Disabled */
+.ekwa-dp-disabled {
+    color: #ccc !important;
+    cursor: default !important;
+    pointer-events: none;
+}
+
+/* ── Warning ───────────────────────────────────────────────────────── */
+
 .form-datepicker {
     position: relative;
 }
@@ -73,44 +186,15 @@
     margin-top: 2px;
 }
 
-/* Loading state styling - before Flatpickr loads */
-.ekwa-datepicker[data-flatpickr-loading],
-.ekwa-datepicker-placeholder[data-flatpickr-loading] {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 11-6.219-8.56'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 10px center !important;
-    background-size: 16px 16px !important;
-}
+/* ── Responsive ────────────────────────────────────────────────────── */
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .ekwa-datepicker,
-    .ekwa-datepicker-placeholder,
-    .flatpickr-input {
-        font-size: 16px !important; /* Prevent zoom on mobile */
-    }
-}
-
-/* Force same input on mobile and desktop - disable mobile mode */
-.flatpickr-mobile {
-    display: none !important;
-}
-
-input.flatpickr-input[type="hidden"] + input.flatpickr-mobile {
-    display: none !important;
-}
-
-/* Datepicker responsive styles for screens smaller than 545px */
 @media (max-width: 545px) {
     .ekwa-datepicker,
-    .ekwa-datepicker-placeholder,
-    .flatpickr-input,
     .form-datepicker input {
         width: 100% !important;
         min-width: 0 !important;
-        flex: 1 1 auto !important;
-        display: block !important;
         box-sizing: border-box !important;
+        font-size: 16px !important; /* prevent iOS zoom */
     }
 
     .form-datepicker {
@@ -118,48 +202,8 @@ input.flatpickr-input[type="hidden"] + input.flatpickr-mobile {
         display: block !important;
     }
 
-    /* Ensure wrapper doesn't restrict width */
-    .form-datepicker .ekwawf-input-wrapper {
-        width: 100% !important;
-        max-width: 100% !important;
-        display: block !important;
-    }
-
-    /* Make Flatpickr calendar full width on small screens */
-    .flatpickr-calendar {
+    .ekwa-dp-calendar {
         width: 100% !important;
         max-width: calc(100vw - 20px) !important;
-    }
-}
-
-/* High DPI / Retina displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .flatpickr-calendar {
-        border-width: 0.5px !important;
-    }
-}
-
-/* Dark mode support (if theme supports it) */
-@media (prefers-color-scheme: dark) {
-    .flatpickr-calendar {
-        background: #2c2c2c !important;
-        border-color: #444 !important;
-        color: #fff !important;
-    }
-
-    .flatpickr-calendar .flatpickr-day {
-        color: #fff !important;
-    }
-
-    .flatpickr-calendar .flatpickr-day:hover {
-        background: #444 !important;
-    }
-
-    .ekwa-datepicker,
-    .ekwa-datepicker-placeholder,
-    .flatpickr-input {
-        background: #2c2c2c !important;
-        border-color: #444 !important;
-        color: #fff !important;
     }
 }

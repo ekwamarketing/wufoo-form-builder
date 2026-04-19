@@ -195,10 +195,14 @@
         });
 
         if (!isValid) {
-            // Scroll to first error within this form
-            const firstError = form.querySelector('.has-error');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Focus the first error field for screen readers, then scroll into view
+            const firstErrorField = form.querySelector('.has-error input, .has-error select, .has-error textarea');
+            const firstErrorContainer = form.querySelector('.has-error');
+            if (firstErrorField) {
+                firstErrorField.focus({ preventScroll: true });
+            }
+            if (firstErrorContainer) {
+                firstErrorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
@@ -370,6 +374,7 @@
         if (fieldContainer && form.contains(fieldContainer)) {
             fieldContainer.classList.add('has-error');
             field.classList.add('error');
+            field.setAttribute('aria-invalid', 'true');
 
             let validationMessage = fieldContainer.querySelector('.validation-message');
             if (validationMessage) {
@@ -383,6 +388,8 @@
                 // Create validation message if it doesn't exist
                 validationMessage = document.createElement('span');
                 validationMessage.className = 'validation-message';
+                validationMessage.setAttribute('role', 'alert');
+                validationMessage.setAttribute('aria-live', 'assertive');
                 validationMessage.textContent = message;
                 validationMessage.style.cssText = 'color: #d94f4f; font-size: 12px; margin-top: 4px; display: block;';
                 fieldContainer.appendChild(validationMessage);
@@ -406,15 +413,18 @@
                 // Create validation message if it doesn't exist
                 validationMessage = document.createElement('span');
                 validationMessage.className = 'validation-message';
+                validationMessage.setAttribute('role', 'alert');
+                validationMessage.setAttribute('aria-live', 'assertive');
                 validationMessage.textContent = message;
                 validationMessage.style.cssText = 'color: #d94f4f; font-size: 12px; margin-top: 4px; display: block;';
                 groupContainer.appendChild(validationMessage);
             }
 
-            // Add error class to all checkboxes in the group
+            // Add error class and aria-invalid to all checkboxes in the group
             const checkboxes = groupContainer.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(function(checkbox) {
                 checkbox.classList.add('error');
+                checkbox.setAttribute('aria-invalid', 'true');
             });
         }
     }
@@ -425,6 +435,7 @@
         if (fieldContainer && form.contains(fieldContainer)) {
             fieldContainer.classList.remove('has-error');
             field.classList.remove('error');
+            field.removeAttribute('aria-invalid');
 
             const validationMessage = fieldContainer.querySelector('.validation-message');
             if (validationMessage) {
@@ -450,6 +461,7 @@
         const errorFields = form.querySelectorAll('.error');
         errorFields.forEach(function(field) {
             field.classList.remove('error');
+            field.removeAttribute('aria-invalid');
         });
 
         const validationMessages = form.querySelectorAll('.validation-message');

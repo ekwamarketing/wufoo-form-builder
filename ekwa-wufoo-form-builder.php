@@ -105,18 +105,18 @@ function ekwa_wufoo_form_builder_frontend_assets() {
             true
         );
 
-        // Datepicker JavaScript (Flatpickr with lazy loading)
+        // Datepicker JavaScript (vanilla – no external dependencies)
         wp_enqueue_script(
-            'ekwa-flatpickr-datepicker',
-            plugins_url('assets/js/flatpickr-datepicker.js', __FILE__),
+            'ekwa-datepicker',
+            plugins_url('assets/js/datepicker.js', __FILE__),
             array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/js/flatpickr-datepicker.js'),
+            filemtime(plugin_dir_path(__FILE__) . 'assets/js/datepicker.js'),
             true
         );
 
-        // Flatpickr custom styles
+        // Datepicker styles
         wp_enqueue_style(
-            'ekwa-flatpickr-styles',
+            'ekwa-datepicker-styles',
             plugins_url('assets/css/flatpickr-datepicker.css', __FILE__),
             array(),
             filemtime(plugin_dir_path(__FILE__) . 'assets/css/flatpickr-datepicker.css')
@@ -449,7 +449,7 @@ function ekwa_wufoo_form_builder_render( $attributes, $content ) {
     $honeypot_html = '<div style="position: absolute; left: -9999px; top: -9999px;" aria-hidden="true"><label for="website_url_' . $form_id . '">Website</label><input type="text" name="website_url" id="website_url_' . $form_id . '" tabindex="-1" autocomplete="off" value=""></div>';
 
     return sprintf(
-        '<div class="ekwa-wufoo-form-builder" data-recaptcha="%s"><form id="%s" name="%s" method="post" action="%s">%s%s%s<div class="form-submit" style="text-align: %s;"><button type="submit" class="submit-button primary submit-%s" style="background-color: %s; color: %s; border-color: %s;">%s</button></div>%s%s%s</form></div>',
+        '<div class="ekwa-wufoo-form-builder" data-recaptcha="%s"><form id="%s" name="%s" method="post" action="%s" novalidate>%s%s%s<div class="form-submit" style="text-align: %s;"><button type="submit" class="submit-button primary submit-%s" style="background-color: %s; color: %s; border-color: %s;" aria-label="%s">%s</button></div>%s%s%s</form></div>',
         $enable_recaptcha ? 'true' : 'false',
         $form_id,
         $form_id,
@@ -462,6 +462,7 @@ function ekwa_wufoo_form_builder_render( $attributes, $content ) {
         $submit_button_color,
         $submit_button_text_color,
         $submit_button_style === 'outline' ? $submit_button_color : 'transparent',
+        $submit_text,
         $submit_text,
         $encrypted_url_html,
         $id_stamp_html,
@@ -483,12 +484,14 @@ function ekwa_wufoo_form_input_render( $attributes ) {
     $enable_phone_mask = isset( $attributes['enablePhoneMask'] ) ? $attributes['enablePhoneMask'] : true;
     $phone_format = !empty( $attributes['phoneFormat'] ) ? $attributes['phoneFormat'] : '###-###-####';
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
@@ -497,7 +500,7 @@ function ekwa_wufoo_form_input_render( $attributes ) {
     $icon_html = '';
     if ( !empty( $icon_name ) && strpos( $icon_name, ':' ) !== false && !empty( $icon_svg_content ) ) {
         $icon_html = sprintf(
-            '<span class="ekwa-icon-svg" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
+            '<span class="ekwa-icon-svg" aria-hidden="true" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
             $icon_svg_content
         );
     }
@@ -547,9 +550,10 @@ function ekwa_wufoo_form_input_render( $attributes ) {
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" aria-label="%s" %s %s %s%s />%s%s</div>',
+        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" %s %s %s %s%s />%s%s</div>',
         $label_html,
         $input_wrapper_start,
         $icon_in_input,
@@ -558,9 +562,9 @@ function ekwa_wufoo_form_input_render( $attributes ) {
         $field_id,
         $input_class,
         $placeholder,
-        esc_attr( $attributes['label'] ),
         $required,
         $aria_required,
+        $aria_describedby,
         $input_style,
         $mask_attributes,
         $input_wrapper_end,
@@ -579,7 +583,7 @@ function ekwa_wufoo_form_select_render( $attributes ) {
     $icon_position = !empty( $attributes['iconPosition'] ) ? $attributes['iconPosition'] : 'left';
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
     $options_array = explode( ',', $options_string );
     $options_html = '<option value="" disabled selected>Select an option...</option>';
@@ -591,10 +595,12 @@ function ekwa_wufoo_form_select_render( $attributes ) {
         }
     }
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
@@ -603,7 +609,7 @@ function ekwa_wufoo_form_select_render( $attributes ) {
     $icon_html = '';
     if ( !empty( $icon_name ) && strpos( $icon_name, ':' ) !== false && !empty( $icon_svg_content ) ) {
         $icon_html = sprintf(
-            '<span class="ekwa-icon-svg" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
+            '<span class="ekwa-icon-svg" aria-hidden="true" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
             $icon_svg_content
         );
     }
@@ -640,17 +646,18 @@ function ekwa_wufoo_form_select_render( $attributes ) {
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-select">%s%s%s<select id="%s" name="%s" aria-label="%s" %s %s %s>%s</select>%s%s</div>',
+        '<div class="form-select">%s%s%s<select id="%s" name="%s" %s %s %s %s>%s</select>%s%s</div>',
         $label_html,
         $select_wrapper_start,
         $icon_in_select,
         $field_id,
         $field_id,
-        esc_attr( $attributes['label'] ),
         $required,
         $aria_required,
+        $aria_describedby,
         $select_style,
         $options_html,
         $select_wrapper_end,
@@ -671,12 +678,14 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
     $min_characters = isset( $attributes['minCharacters'] ) ? intval( $attributes['minCharacters'] ) : 10;
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
@@ -685,7 +694,7 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
     $icon_html = '';
     if ( !empty( $icon_name ) && strpos( $icon_name, ':' ) !== false && !empty( $icon_svg_content ) ) {
         $icon_html = sprintf(
-            '<span class="ekwa-icon-svg" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
+            '<span class="ekwa-icon-svg" aria-hidden="true" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
             $icon_svg_content
         );
     }
@@ -728,19 +737,20 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" aria-label="%s" rows="%d" %s %s %s %s %s></textarea>%s%s</div>',
+        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" rows="%d" %s %s %s %s %s %s></textarea>%s%s</div>',
         $label_html,
         $textarea_wrapper_start,
         $icon_in_textarea,
         $field_id,
         $field_id,
         $placeholder,
-        esc_attr( $attributes['label'] ),
         $rows,
         $required,
         $aria_required,
+        $aria_describedby,
         $minlength_attr,
         $min_chars_data,
         $textarea_style,
@@ -759,7 +769,7 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
     $required = $attributes['required'] ? 'required' : '';
     $validation_message = esc_html( $attributes['validationMessage'] );
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
     // Parse options and IDs
     $options_array = explode( ',', $options_string );
@@ -776,15 +786,18 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
         $ids_array[] = '';
     }
 
+    $validation_id = $field_name . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     // Build radio buttons HTML
     $radio_buttons_html = '';
@@ -796,13 +809,12 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
 
         $radio_buttons_html .= sprintf(
             '<label for="%s" style="display: block; margin-bottom: 8px; cursor: pointer;">
-                <input type="radio" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-right: 8px;" />
+                <input type="radio" id="%s" name="%s" value="%s" %s %s style="margin-right: 8px;" />
                 %s
             </label>',
             $radio_id,
             $radio_id,
             $field_name,
-            esc_attr( $option ),
             esc_attr( $option ),
             $is_checked,
             $required,
@@ -812,13 +824,14 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
 
     return sprintf(
         '<div class="form-radio">
-            <fieldset role="radiogroup" %s style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
+            <fieldset role="radiogroup" %s %s style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
                 <legend style="padding: 0 10px;">%s%s</legend>
                 %s
             </fieldset>
             %s
         </div>',
         $aria_required,
+        $aria_describedby,
         $label,
         $required_indicator,
         $radio_buttons_html,
@@ -836,22 +849,25 @@ function ekwa_wufoo_form_checkbox_render( $attributes ) {
     $required = $attributes['required'] ? 'required' : '';
     $validation_message = esc_html( $attributes['validationMessage'] );
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
         '<div class="form-checkbox">
             <label for="%s" style="display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s %s style="margin-right: 8px;" />
+                <input type="checkbox" id="%s" name="%s" value="%s" %s %s %s %s style="margin-right: 8px;" />
                 %s%s
             </label>
             %s
@@ -860,10 +876,10 @@ function ekwa_wufoo_form_checkbox_render( $attributes ) {
         $field_id,
         $field_id,
         $value,
-        esc_attr( $attributes['label'] ),
         $checked,
         $required,
         $aria_required,
+        $aria_describedby,
         $label,
         $required_indicator,
         $validation_html
@@ -882,7 +898,7 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
     $min_selections = intval( $attributes['minSelections'] );
     $max_selections = intval( $attributes['maxSelections'] );
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
     // Parse options - split by comma and clean
     $options_array = array_map('trim', explode(',', $options_string));
@@ -899,10 +915,12 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
     $options_array = array_values($options_array);
     $ids_array = array_values($ids_array);
 
+    $validation_id = $field_name . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;" data-min-selections="%d" data-max-selections="%d">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;" data-min-selections="%d" data-max-selections="%d">%s</span>',
+            $validation_id,
             $min_selections,
             $max_selections,
             $validation_message
@@ -920,13 +938,12 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
 
         $checkbox_buttons_html .= sprintf(
             '<label for="%s" style="display: block; margin-bottom: 8px; cursor: pointer;">
-                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-right: 8px;" data-group="%s" />
+                <input type="checkbox" id="%s" name="%s" value="%s" %s %s style="margin-right: 8px;" data-group="%s" />
                 %s
             </label>',
             $field_id,
             $field_id,
             $field_id, // Each checkbox has its own name
-            esc_attr( $option ),
             esc_attr( $option ),
             $is_checked,
             $required,
@@ -954,10 +971,12 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     $content_wrapper = sprintf(
-        '<fieldset role="group" %s style="%s">%s%s</fieldset>',
+        '<fieldset role="group" %s %s style="%s">%s%s</fieldset>',
         $aria_required,
+        $aria_describedby,
         $fieldset_style,
         $legend_html,
         $checkbox_buttons_html
@@ -988,7 +1007,7 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $icon_position = !empty( $attributes['iconPosition'] ) ? $attributes['iconPosition'] : 'left';
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
 
-    $required_indicator = $attributes['required'] ? ' <span style="color: red;">*</span>' : '';
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
     // Set min date if past dates are disabled
     if ( $disable_past_dates && empty( $min_date ) ) {
@@ -1000,10 +1019,12 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
         $max_date = date('Y-m-d');
     }
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
@@ -1024,7 +1045,7 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $icon_html = '';
     if ( !empty( $icon_name ) && strpos( $icon_name, ':' ) !== false && !empty( $icon_svg_content ) ) {
         $icon_html = sprintf(
-            '<span class="ekwa-icon-svg" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
+            '<span class="ekwa-icon-svg" aria-hidden="true" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">%s</span>',
             $icon_svg_content
         );
     }
@@ -1048,7 +1069,7 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $icon_in_input = '';
 
     if ( $icon_html && ($icon_position === 'left' || $icon_position === 'right') ) {
-        $input_wrapper_start = '<div  style="position: relative; display: flex; align-items: center;">';
+        $input_wrapper_start = '<div class="ekwawf-input-wrapper" style="position: relative; display: flex; align-items: center;">';
         $input_wrapper_end = '</div>';
         $icon_position_style = $icon_position === 'left' ? 'left: 10px;' : 'right: 10px;';
         $icon_in_input = sprintf(
@@ -1062,13 +1083,14 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $max_attr = !empty( $max_date ) ? sprintf( 'max="%s"', $max_date ) : '';
     $value_attr = !empty( $default_value ) ? sprintf( 'value="%s"', $default_value ) : '';
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
         '<div class="form-datepicker">
             %s
             %s
             %s
-            <input type="text" id="%s" name="%s" class="ekwa-datepicker" aria-label="%s" %s %s %s %s %s placeholder="%s" autocomplete="off" style="%s"%s />
+            <input type="text" id="%s" name="%s" class="ekwa-datepicker" %s %s %s %s %s %s placeholder="%s" autocomplete="off" style="%s"%s />
             %s
             %s
         </div>',
@@ -1077,9 +1099,9 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
         $icon_in_input,
         $field_id,
         $field_id,
-        esc_attr( $attributes['label'] ),
         $required,
         $aria_required,
+        $aria_describedby,
         $min_attr,
         $max_attr,
         $value_attr,
@@ -1102,10 +1124,12 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
     $required = $attributes['required'] ? 'required' : '';
     $validation_message = esc_html( $attributes['validationMessage'] );
 
+    $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
         $validation_html = sprintf(
-            '<span class="validation-message" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            '<span id="%s" class="validation-message" role="alert" aria-live="assertive" style="color: #d94f4f; font-size: 12px; margin-top: 4px; display: none;">%s</span>',
+            $validation_id,
             $validation_message
         );
     }
@@ -1120,11 +1144,12 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
     }
 
     $aria_required = $attributes['required'] ? 'aria-required="true"' : '';
+    $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
         '<div class="form-privacy-checkbox">
             <label for="%s" style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4;">
-                <input type="checkbox" id="%s" name="%s" value="%s" aria-label="%s" %s %s style="margin-top: 2px; flex-shrink: 0;" />
+                <input type="checkbox" id="%s" name="%s" value="%s" %s %s %s style="margin-top: 2px; flex-shrink: 0;" />
                 <span>%s</span>
             </label>
             %s
@@ -1133,9 +1158,9 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
         $field_id,
         $field_id,
         $value,
-        esc_attr( wp_strip_all_tags( $privacy_text ) ),
         $required,
         $aria_required,
+        $aria_describedby,
         $processed_text,
         $validation_html
     );
