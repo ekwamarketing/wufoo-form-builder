@@ -5,7 +5,7 @@
 **License:** GPL v2 or later
 **Requires:** WordPress with Gutenberg block editor
 
-The EKWA Wufoo Form Builder is a comprehensive WordPress plugin that allows users to create custom forms using a block-based Gutenberg interface. It integrates with Wufoo's form submission service and includes a full suite of field blocks, icon support, client-side validation, anti-spam protection, phone masking, and a Flatpickr-powered date picker. 
+The EKWA Wufoo Form Builder is a comprehensive WordPress plugin that allows users to create custom forms using a block-based Gutenberg interface. It integrates with Wufoo's form submission service and includes a full suite of field blocks, icon support, client-side validation, anti-spam protection, phone masking, and a Flatpickr-powered date picker. test
 
 ---
 
