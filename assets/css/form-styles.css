@@ -16,6 +16,10 @@
     border: 0 !important;
 }
 
+.ekwa-wufoo-form-builder .wp-block-columns-is-layout-flex {
+    gap: 1rem;
+}
+
 .ekwa-wufoo-form-builder form {
     padding: 20px;
     border: 1px solid #ddd;
