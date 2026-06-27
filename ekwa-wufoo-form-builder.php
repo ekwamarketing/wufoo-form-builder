@@ -3,7 +3,7 @@
 /**
  * Plugin Name: EKWA Wufoo Form Builder
  * Description: he EKWA Wufoo Form Builder is a comprehensive WordPress plugin that allows users to create custom forms using a block-based interface.
- * Version: 1.2.4
+ * Version: 1.2.5
  * Author: Sameera Kanchana
  * Author URI: mailto:agskanchana@gmail.com
  * License: GPL2
@@ -53,103 +53,216 @@ function ekwa_wufoo_form_builder_editor_assets() {
 }
 add_action( 'enqueue_block_editor_assets', 'ekwa_wufoo_form_builder_editor_assets' );
 
-// Enqueue frontend and editor shared styles (BOTH frontend and editor)
-function ekwa_wufoo_form_builder_shared_assets() {
-    // Check if conditional loading is enabled (default: true)
+/**
+ * Read a plugin asset file's contents. Returns '' when the file is missing.
+ */
+function ekwa_wufoo_read_asset( $relative_path ) {
+    $path = EKWA_WUFOO_FORM_BUILDER_PATH . $relative_path;
+    return file_exists( $path ) ? file_get_contents( $path ) : '';
+}
+
+/**
+ * Whether the plugin's frontend assets should load on the current request.
+ *
+ * Honors the "Conditional Assets Loading" option (default: on): when enabled,
+ * assets only load on frontend pages that actually contain the form block.
+ * This single gate is applied to the inlined CSS/JS and to the on-interaction
+ * datepicker loader alike, so deferred/inlined assets stay conditional too.
+ */
+function ekwa_wufoo_should_load_frontend_assets() {
+    if ( is_admin() ) {
+        return false;
+    }
     $conditional_loading = get_option( 'ekwa_wufoo_conditional_assets', true );
+    return ! $conditional_loading || has_block( 'ekwa-wufoo/form-builder' );
+}
 
-    // If conditional loading is disabled, always enqueue assets
-    // If conditional loading is enabled, only enqueue on pages that have the form block OR in the editor
-    $should_enqueue = !$conditional_loading || has_block('ekwa-wufoo/form-builder') || is_admin();
+/**
+ * Whether any Wufoo form block on the current page has reCAPTCHA enabled.
+ *
+ * Walks the current post's parsed blocks for an 'ekwa-wufoo/form-builder' block
+ * whose "Enable reCAPTCHA" toggle (the enableRecaptcha attribute) is on, so the
+ * reCAPTCHA scripts load only when a form on the page actually uses them —
+ * driven by the per-form toggle rather than by whether a Site Key happens to be
+ * configured globally.
+ */
+function ekwa_wufoo_page_has_recaptcha_form() {
+    $post = get_post();
+    if ( ! $post || empty( $post->post_content ) || ! has_blocks( $post->post_content ) ) {
+        return false;
+    }
+    return ekwa_wufoo_blocks_have_recaptcha( parse_blocks( $post->post_content ) );
+}
 
-    if ( $should_enqueue ) {
-        // STYLE.CSS - Shared frontend and editor styles
-        $css_file = EKWA_WUFOO_FORM_BUILDER_PATH . 'build/style.css';
-        if ( file_exists( $css_file ) ) {
-            wp_enqueue_style(
-                'ekwa-wufoo-form-builder-style',
-                plugins_url( 'build/style.css', __FILE__ ),
-                array(),
-                filemtime( $css_file )
-            );
+/**
+ * Recursively scan parsed blocks for a reCAPTCHA-enabled form block.
+ */
+function ekwa_wufoo_blocks_have_recaptcha( $blocks ) {
+    foreach ( $blocks as $block ) {
+        if (
+            isset( $block['blockName'] )
+            && 'ekwa-wufoo/form-builder' === $block['blockName']
+            && ! empty( $block['attrs']['enableRecaptcha'] )
+        ) {
+            return true;
         }
+        if ( ! empty( $block['innerBlocks'] ) && ekwa_wufoo_blocks_have_recaptcha( $block['innerBlocks'] ) ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Enqueue shared styles for the BLOCK EDITOR only.
+// On the frontend these styles are inlined (see ekwa_wufoo_form_builder_frontend_assets).
+function ekwa_wufoo_form_builder_shared_assets() {
+    if ( ! is_admin() ) {
+        return; // Frontend inlines style.css instead of enqueuing an external file.
+    }
+
+    // STYLE.CSS - Shared frontend and editor styles (editor side here)
+    $css_file = EKWA_WUFOO_FORM_BUILDER_PATH . 'build/style.css';
+    if ( file_exists( $css_file ) ) {
+        wp_enqueue_style(
+            'ekwa-wufoo-form-builder-style',
+            plugins_url( 'build/style.css', __FILE__ ),
+            array(),
+            filemtime( $css_file )
+        );
     }
 }
 add_action( 'enqueue_block_assets', 'ekwa_wufoo_form_builder_shared_assets' );
 
-// Enqueue frontend-only assets
+/**
+ * Inline the datepicker CSS/JS into the page but defer injecting and executing
+ * them until the visitor's first interaction (mouse move, mouse down, touch,
+ * key press, scroll, wheel or pointer move). The asset bodies still travel
+ * inline (no extra HTTP request), but they stay off the critical render/JS
+ * path until the user actually engages with the page.
+ *
+ * Called only from the frontend asset hook, so it inherits the same
+ * conditional-loading gate as the rest of the assets.
+ */
+function ekwa_wufoo_enqueue_datepicker_on_interaction() {
+    $dp_css = ekwa_wufoo_read_asset( 'assets/css/flatpickr-datepicker.css' );
+    $dp_js  = ekwa_wufoo_read_asset( 'assets/js/datepicker.js' );
+
+    if ( trim( $dp_js ) === '' ) {
+        return;
+    }
+
+    // Encode the asset bodies as JS string literals. JSON_HEX_* ensures a stray
+    // "</script>" (or quote/ampersand) inside the assets can't break out of the
+    // inline <script> we emit.
+    $json_flags  = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+    $css_literal = wp_json_encode( $dp_css, $json_flags );
+    $js_literal  = wp_json_encode( $dp_js, $json_flags );
+
+    $loader = <<<JS
+(function () {
+    'use strict';
+    // Nothing to defer if the page has no datepicker fields.
+    if (!document.querySelector('input.ekwa-datepicker')) {
+        return;
+    }
+
+    var DP_CSS = {$css_literal};
+    var DP_JS = {$js_literal};
+    var loaded = false;
+    // Broad set so loading triggers on the very first sign of interaction.
+    var events = ['mousemove', 'mousedown', 'touchstart', 'keydown', 'scroll', 'wheel', 'pointermove'];
+    var opts = { capture: true, passive: true };
+
+    function loadDatepicker(e) {
+        if (loaded) { return; }
+        loaded = true;
+        events.forEach(function (ev) { window.removeEventListener(ev, loadDatepicker, opts); });
+
+        // Inject the (previously inlined) datepicker styles.
+        var style = document.createElement('style');
+        style.id = 'ekwa-datepicker-styles';
+        style.textContent = DP_CSS;
+        document.head.appendChild(style);
+
+        // Inject and execute the datepicker script.
+        var script = document.createElement('script');
+        script.textContent = DP_JS;
+        document.body.appendChild(script);
+
+        // The script self-initializes when the DOM is already ready; call the
+        // exposed initializer as a safety net for any timing edge cases.
+        if (window.EkwaDatepicker && window.EkwaDatepicker.initializeDatepickers) {
+            window.EkwaDatepicker.initializeDatepickers();
+        }
+
+        // If the first interaction landed directly on a date field, replay the
+        // click so the now-initialized calendar opens for that field.
+        if (e && e.target && e.target.closest) {
+            var field = e.target.closest('input.ekwa-datepicker');
+            if (field) { setTimeout(function () { field.click(); }, 0); }
+        }
+    }
+
+    events.forEach(function (ev) { window.addEventListener(ev, loadDatepicker, opts); });
+})();
+JS;
+
+    wp_register_script( 'ekwa-wufoo-datepicker-loader', false, array(), null, true );
+    wp_enqueue_script( 'ekwa-wufoo-datepicker-loader' );
+    wp_add_inline_script( 'ekwa-wufoo-datepicker-loader', $loader );
+}
+
+// Inline the plugin's frontend CSS/JS instead of loading external files.
+// Honors Conditional Assets Loading via ekwa_wufoo_should_load_frontend_assets().
 function ekwa_wufoo_form_builder_frontend_assets() {
-    // Check if conditional loading is enabled (default: true)
-    $conditional_loading = get_option( 'ekwa_wufoo_conditional_assets', true );
+    if ( ! ekwa_wufoo_should_load_frontend_assets() ) {
+        return;
+    }
 
-    // If conditional loading is disabled, always enqueue on frontend (NOT in admin)
-    // If conditional loading is enabled, only enqueue on frontend pages that have the form block
-    $should_enqueue = !is_admin() && (!$conditional_loading || has_block('ekwa-wufoo/form-builder'));
+    // ── Inline CSS (style.css + form-styles.css) ───────────────────────────
+    // Datepicker CSS is intentionally excluded; it is injected on first user
+    // interaction by the datepicker loader below.
+    $inline_css = ekwa_wufoo_read_asset( 'build/style.css' )
+        . "\n" . ekwa_wufoo_read_asset( 'assets/css/form-styles.css' );
 
-    if ( $should_enqueue ) {
-        // Form validation JavaScript
+    if ( trim( $inline_css ) !== '' ) {
+        // A src-less handle lets WordPress print our inline CSS in the <head>.
+        wp_register_style( 'ekwa-wufoo-inline', false );
+        wp_enqueue_style( 'ekwa-wufoo-inline' );
+        wp_add_inline_style( 'ekwa-wufoo-inline', $inline_css );
+    }
+
+    // ── Inline core JS (form-validation.js + phone-mask.js) ────────────────
+    $inline_js = ekwa_wufoo_read_asset( 'assets/js/form-validation.js' )
+        . "\n" . ekwa_wufoo_read_asset( 'assets/js/phone-mask.js' );
+
+    if ( trim( $inline_js ) !== '' ) {
+        // src-less footer handle so the inline JS prints just before </body>;
+        // the scripts' own DOMContentLoaded listeners still fire normally.
+        wp_register_script( 'ekwa-wufoo-inline', false, array(), null, true );
+        wp_enqueue_script( 'ekwa-wufoo-inline' );
+        wp_add_inline_script( 'ekwa-wufoo-inline', $inline_js );
+    }
+
+    // ── Datepicker: inlined assets, injected on first user interaction ─────
+    ekwa_wufoo_enqueue_datepicker_on_interaction();
+
+    // ── reCAPTCHA (only when a form on this page has "Enable reCAPTCHA" on) ─
+    if ( ekwa_wufoo_page_has_recaptcha_form() ) {
+        // Google's API must stay external; load it with the explicit-render onload hook.
         wp_enqueue_script(
-            'ekwa-form-validation',
-            plugins_url('assets/js/form-validation.js', __FILE__),
+            'google-recaptcha',
+            'https://www.google.com/recaptcha/api.js?onload=ekwaRecaptchaOnLoad&render=explicit',
             array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/js/form-validation.js'),
+            null,
             true
         );
 
-        // Phone masking JavaScript
-        wp_enqueue_script(
-            'ekwa-phone-mask',
-            plugins_url('assets/js/phone-mask.js', __FILE__),
-            array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/js/phone-mask.js'),
-            true
-        );
-
-        // Datepicker JavaScript (vanilla – no external dependencies)
-        wp_enqueue_script(
-            'ekwa-datepicker',
-            plugins_url('assets/js/datepicker.js', __FILE__),
-            array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/js/datepicker.js'),
-            true
-        );
-
-        // Datepicker styles
-        wp_enqueue_style(
-            'ekwa-datepicker-styles',
-            plugins_url('assets/css/flatpickr-datepicker.css', __FILE__),
-            array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/css/flatpickr-datepicker.css')
-        );
-
-        // Form styles
-        wp_enqueue_style(
-            'ekwa-form-styles',
-            plugins_url('assets/css/form-styles.css', __FILE__),
-            array(),
-            filemtime(plugin_dir_path(__FILE__) . 'assets/css/form-styles.css')
-        );
-
-        // reCAPTCHA JavaScript (only if site key is configured)
-        $recaptcha_site_key = get_option( 'ekwa_wufoo_recaptcha_site_key', '' );
-        if ( !empty( $recaptcha_site_key ) ) {
-            // Google reCAPTCHA API script
-            wp_enqueue_script(
-                'google-recaptcha',
-                'https://www.google.com/recaptcha/api.js?onload=ekwaRecaptchaOnLoad&render=explicit',
-                array(),
-                null,
-                true
-            );
-
-            // Our reCAPTCHA validation script
-            wp_enqueue_script(
-                'ekwa-recaptcha',
-                plugins_url('assets/js/recaptcha.js', __FILE__),
-                array('google-recaptcha'),
-                filemtime(plugin_dir_path(__FILE__) . 'assets/js/recaptcha.js'),
-                true
-            );
+        // Inline our own reCAPTCHA handler *before* Google's script so the
+        // ekwaRecaptchaOnLoad callback is defined when Google invokes it.
+        $recaptcha_js = ekwa_wufoo_read_asset( 'assets/js/recaptcha.js' );
+        if ( trim( $recaptcha_js ) !== '' ) {
+            wp_add_inline_script( 'google-recaptcha', $recaptcha_js, 'before' );
         }
     }
 }

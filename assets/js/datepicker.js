@@ -464,7 +464,13 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', initializeDatepickers);
+    // Initialize on DOMContentLoaded, or immediately if the DOM is already
+    // ready (e.g. when this script is injected on first user interaction).
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeDatepickers);
+    } else {
+        initializeDatepickers();
+    }
 
     // Handle dynamically added datepickers
     if (window.MutationObserver) {
