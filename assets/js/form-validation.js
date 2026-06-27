@@ -75,6 +75,15 @@
         // Handle form submission
         form.addEventListener('submit', handleFormSubmit);
 
+        // Snapshot each field's author-defined custom validation message so the
+        // dynamic text we later write into these spans (e.g. the live character
+        // count) is never mistaken for a custom message on a subsequent check.
+        form.querySelectorAll('.validation-message').forEach(function(msg) {
+            if (!msg.hasAttribute('data-custom-message')) {
+                msg.setAttribute('data-custom-message', msg.textContent.trim());
+            }
+        });
+
         // Add real-time validation on field blur/change
         const formFields = form.querySelectorAll('input, select, textarea');
         formFields.forEach(function(field) {
@@ -171,8 +180,10 @@
                 const minSelections = validationMessageEl ? parseInt(validationMessageEl.getAttribute('data-min-selections')) || 1 : 1;
                 const maxSelections = validationMessageEl ? parseInt(validationMessageEl.getAttribute('data-max-selections')) || 0 : 0;
 
-                // Get custom validation message if available, otherwise use default
-                const customMessage = validationMessageEl && validationMessageEl.textContent.trim() ? validationMessageEl.textContent.trim() : '';
+                // Get custom validation message if available, otherwise use default.
+                // Read the snapshotted author message so a previously shown
+                // dynamic error isn't re-used as the custom message.
+                const customMessage = validationMessageEl && validationMessageEl.getAttribute('data-custom-message') ? validationMessageEl.getAttribute('data-custom-message').trim() : '';
 
                 let groupIsValid = true;
                 let errorMessage = '';
@@ -218,12 +229,16 @@
         // Clear previous errors for this field only
         clearFieldError(field, form);
 
-        // Check minimum characters for textareas (even if not required, but only if there's content)
+        // Minimum-character check for textareas. Runs before the required check
+        // so the message always reflects the LIVE character count (including 0).
+        // Optional fields may be left empty, so only enforce when the field has
+        // content or is required.
         if (field.tagName.toLowerCase() === 'textarea') {
-            var minChars = field.getAttribute('data-min-characters');
-            if (minChars && parseInt(minChars) > 0 && field.value.trim().length > 0) {
+            var minChars = parseInt(field.getAttribute('data-min-characters'), 10) || 0;
+            if (minChars > 0) {
                 var charCount = field.value.trim().length;
-                if (charCount < parseInt(minChars)) {
+                var isRequiredField = field.hasAttribute('required');
+                if ((charCount > 0 || isRequiredField) && charCount < minChars) {
                     isValid = false;
                     errorMessage = 'Please enter at least ' + minChars + ' characters. Currently: ' + charCount + ' characters.';
                     showFieldError(field, errorMessage, form);
@@ -333,19 +348,11 @@
             }
         } else {
             // Text inputs, textareas, number, password, etc.
+            // (Textarea minimum-character checks are handled near the top of
+            // this function so the live count is always accurate.)
             if (!field.value.trim()) {
                 isValid = false;
                 errorMessage = getValidationMessage(field, 'This field is required.');
-            } else if (field.tagName.toLowerCase() === 'textarea') {
-                // Check minimum character limit for textareas
-                var minChars = field.getAttribute('data-min-characters');
-                if (minChars && parseInt(minChars) > 0) {
-                    var charCount = field.value.trim().length;
-                    if (charCount < parseInt(minChars)) {
-                        isValid = false;
-                        errorMessage = 'Please enter at least ' + minChars + ' characters. Currently: ' + charCount + ' characters.';
-                    }
-                }
             }
         }
 
@@ -361,8 +368,14 @@
         const fieldContainer = field.closest('.form-input, .form-select, .form-textarea, .form-checkbox, .form-radio, .form-datepicker, .form-privacy-checkbox');
         const validationSpan = fieldContainer ? fieldContainer.querySelector('.validation-message') : null;
 
-        if (validationSpan && validationSpan.textContent.trim()) {
-            return validationSpan.textContent.trim();
+        // Use the author-defined custom message captured at setup — NOT the
+        // span's current text, which may be a dynamically generated error (e.g.
+        // a live character count) left over from a previous validation.
+        if (validationSpan) {
+            const custom = validationSpan.getAttribute('data-custom-message');
+            if (custom && custom.trim()) {
+                return custom.trim();
+            }
         }
 
         return defaultMessage;

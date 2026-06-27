@@ -49,6 +49,10 @@
 .form-select select,
 .form-datepicker input {
     height: 40px;
+    /* Datepicker input isn't covered by the general input rule below, so set
+       border-box here too — otherwise its inline padding makes it taller than
+       the other 40px fields. */
+    box-sizing: border-box;
 }
  .form-datepicker .ekwawf-input-wrapper input{
     padding-left: 35px !important;
