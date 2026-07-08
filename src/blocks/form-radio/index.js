@@ -38,6 +38,10 @@ registerBlockType('ekwa-wufoo/form-radio', {
         validationMessage: {
             type: 'string',
             default: ''
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

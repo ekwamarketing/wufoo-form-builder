@@ -54,6 +54,10 @@ registerBlockType('ekwa-wufoo/form-input', {
         phoneFormat: {
             type: 'string',
             default: '###-###-####'
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

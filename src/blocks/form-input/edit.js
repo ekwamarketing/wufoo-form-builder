@@ -4,6 +4,7 @@ import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { PanelBody } from '@wordpress/components';
 import { Fragment, useState, useEffect } from '@wordpress/element';
 import IconPicker from '../../components/IconPicker';
+import CustomAttributesControl from '../../components/CustomAttributesControl';
 
 const Edit = ({ attributes, setAttributes, isSelected }) => {
     const blockProps = useBlockProps({
@@ -21,7 +22,8 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
         iconPosition,
         iconSvgContent,
         enablePhoneMask,
-        phoneFormat
+        phoneFormat,
+        customAttributes
     } = attributes;
 
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -213,6 +215,11 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
                         />
                     )}
                 </PanelBody>
+
+                <CustomAttributesControl
+                    value={customAttributes}
+                    onChange={(value) => setAttributes({ customAttributes: value })}
+                />
             </InspectorControls>
 
             <div {...blockProps}>

@@ -46,6 +46,10 @@ registerBlockType('ekwa-wufoo/form-checkbox-group', {
         maxSelections: {
             type: 'number',
             default: 0 // 0 = unlimited
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

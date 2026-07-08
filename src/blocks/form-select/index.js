@@ -42,6 +42,10 @@ registerBlockType('ekwa-wufoo/form-select', {
         iconSvgContent: {
             type: 'string',
             default: ''
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

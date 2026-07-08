@@ -47,6 +47,10 @@ registerBlockType('ekwa-wufoo/form-privacy-checkbox', {
         validationMessage: {
             type: 'string',
             default: 'You must accept the privacy policy to continue.'
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

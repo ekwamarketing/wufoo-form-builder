@@ -4,6 +4,7 @@ import { useBlockProps, InspectorControls, LinkControl } from '@wordpress/block-
 import { PanelBody } from '@wordpress/components';
 import { Fragment, useState } from '@wordpress/element';
 import { link, linkOff } from '@wordpress/icons';
+import CustomAttributesControl from '../../components/CustomAttributesControl';
 
 const Edit = ({ attributes, setAttributes, isSelected }) => {
     const blockProps = useBlockProps({
@@ -21,7 +22,8 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
         value,
         checked,
         required,
-        validationMessage
+        validationMessage,
+        customAttributes
     } = attributes;
 
     const handleCheckboxToggle = () => {
@@ -207,6 +209,11 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
                         />
                     )}
                 </PanelBody>
+
+                <CustomAttributesControl
+                    value={customAttributes}
+                    onChange={(value) => setAttributes({ customAttributes: value })}
+                />
             </InspectorControls>
 
             <div {...blockProps}>

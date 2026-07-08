@@ -50,6 +50,10 @@ registerBlockType('ekwa-wufoo/form-textarea', {
         minCharacters: {
             type: 'number',
             default: 10
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

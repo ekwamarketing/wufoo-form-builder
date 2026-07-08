@@ -3,6 +3,7 @@ import { TextControl, TextareaControl, ToggleControl, RangeControl, Button } fro
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { PanelBody } from '@wordpress/components';
 import { Fragment, useState } from '@wordpress/element';
+import CustomAttributesControl from '../../components/CustomAttributesControl';
 
 const Edit = ({ attributes, setAttributes, isSelected }) => {
     const blockProps = useBlockProps({
@@ -18,7 +19,8 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
         required,
         validationMessage,
         minSelections,
-        maxSelections
+        maxSelections,
+        customAttributes
     } = attributes;
 
     const [showIndividualIds, setShowIndividualIds] = useState(false);
@@ -194,6 +196,11 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
                         </>
                     )}
                 </PanelBody>
+
+                <CustomAttributesControl
+                    value={customAttributes}
+                    onChange={(value) => setAttributes({ customAttributes: value })}
+                />
             </InspectorControls>
 
             <div {...blockProps}>

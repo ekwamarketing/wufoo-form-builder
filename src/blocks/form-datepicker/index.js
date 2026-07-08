@@ -66,6 +66,10 @@ registerBlockType('ekwa-wufoo/form-datepicker', {
         iconSvgContent: {
             type: 'string',
             default: ''
+        },
+        customAttributes: {
+            type: 'array',
+            default: []
         }
     },
     edit: Edit,

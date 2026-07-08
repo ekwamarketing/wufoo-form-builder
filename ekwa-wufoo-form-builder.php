@@ -3,7 +3,7 @@
 /**
  * Plugin Name: EKWA Wufoo Form Builder
  * Description: he EKWA Wufoo Form Builder is a comprehensive WordPress plugin that allows users to create custom forms using a block-based interface.
- * Version: 1.2.5
+ * Version: 1.2.6
  * Author: Sameera Kanchana
  * Author URI: mailto:agskanchana@gmail.com
  * License: GPL2
@@ -331,7 +331,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'iconPosition' => array('type' => 'string', 'default' => 'left'),
             'iconSvgContent' => array('type' => 'string', 'default' => ''),
             'enablePhoneMask' => array('type' => 'boolean', 'default' => true),
-            'phoneFormat' => array('type' => 'string', 'default' => '###-###-####')
+            'phoneFormat' => array('type' => 'string', 'default' => '###-###-####'),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -343,7 +344,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'options' => array('type' => 'string', 'default' => 'Option 1,Option 2,Option 3'),
             'fieldId' => array('type' => 'string', 'default' => ''),
             'required' => array('type' => 'boolean', 'default' => false),
-            'validationMessage' => array('type' => 'string', 'default' => '')
+            'validationMessage' => array('type' => 'string', 'default' => ''),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -370,7 +372,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'optionIds' => array('type' => 'string', 'default' => ''),
             'selectedValue' => array('type' => 'string', 'default' => ''),
             'required' => array('type' => 'boolean', 'default' => false),
-            'validationMessage' => array('type' => 'string', 'default' => '')
+            'validationMessage' => array('type' => 'string', 'default' => ''),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -383,7 +386,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'fieldId' => array('type' => 'string', 'default' => ''),
             'rows' => array('type' => 'number', 'default' => 4),
             'required' => array('type' => 'boolean', 'default' => false),
-            'validationMessage' => array('type' => 'string', 'default' => '')
+            'validationMessage' => array('type' => 'string', 'default' => ''),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -399,7 +403,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'required' => array('type' => 'boolean', 'default' => false),
             'validationMessage' => array('type' => 'string', 'default' => ''),
             'minSelections' => array('type' => 'number', 'default' => 1),
-            'maxSelections' => array('type' => 'number', 'default' => 0)
+            'maxSelections' => array('type' => 'number', 'default' => 0),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -420,7 +425,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'placeholder' => array('type' => 'string', 'default' => 'Select a date'),
             'iconName' => array('type' => 'string', 'default' => ''),
             'iconPosition' => array('type' => 'string', 'default' => 'left'),
-            'iconSvgContent' => array('type' => 'string', 'default' => '')
+            'iconSvgContent' => array('type' => 'string', 'default' => ''),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 
@@ -434,7 +440,8 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'linkText' => array('type' => 'string', 'default' => 'Privacy Policy'),
             'value' => array('type' => 'string', 'default' => 'I Agree'),
             'required' => array('type' => 'boolean', 'default' => true),
-            'validationMessage' => array('type' => 'string', 'default' => 'You must accept the privacy policy to continue.')
+            'validationMessage' => array('type' => 'string', 'default' => 'You must accept the privacy policy to continue.'),
+            'customAttributes' => array('type' => 'array', 'default' => array())
         )
     ) );
 }
@@ -583,6 +590,32 @@ function ekwa_wufoo_form_builder_render( $attributes, $content ) {
     );
 }
 
+// Build a safe HTML attribute string from a block's customAttributes array
+function ekwa_wufoo_render_custom_attributes( $custom_attributes ) {
+    if ( empty( $custom_attributes ) || ! is_array( $custom_attributes ) ) {
+        return '';
+    }
+
+    $html = '';
+    foreach ( $custom_attributes as $attr ) {
+        if ( empty( $attr['name'] ) ) {
+            continue;
+        }
+
+        $name = strtolower( trim( $attr['name'] ) );
+
+        // Only allow safe attribute name characters, and block event-handler attributes (onclick, onerror, ...)
+        if ( ! preg_match( '/^[a-z][a-z0-9\-]*$/', $name ) || strpos( $name, 'on' ) === 0 ) {
+            continue;
+        }
+
+        $value = isset( $attr['value'] ) ? $attr['value'] : '';
+        $html .= sprintf( ' %s="%s"', esc_attr( $name ), esc_attr( $value ) );
+    }
+
+    return $html;
+}
+
 // Updated render callbacks to include required attribute
 function ekwa_wufoo_form_input_render( $attributes ) {
     $label = esc_html( $attributes['label'] );
@@ -596,6 +629,7 @@ function ekwa_wufoo_form_input_render( $attributes ) {
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
     $enable_phone_mask = isset( $attributes['enablePhoneMask'] ) ? $attributes['enablePhoneMask'] : true;
     $phone_format = !empty( $attributes['phoneFormat'] ) ? $attributes['phoneFormat'] : '###-###-####';
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -666,7 +700,7 @@ function ekwa_wufoo_form_input_render( $attributes ) {
     $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" %s %s %s %s%s />%s%s</div>',
+        '<div class="form-input">%s%s%s<input type="%s" id="%s" name="%s" class="%s" placeholder="%s" %s %s %s %s%s%s />%s%s</div>',
         $label_html,
         $input_wrapper_start,
         $icon_in_input,
@@ -680,6 +714,7 @@ function ekwa_wufoo_form_input_render( $attributes ) {
         $aria_describedby,
         $input_style,
         $mask_attributes,
+        $custom_attributes_html,
         $input_wrapper_end,
         $validation_html
     );
@@ -695,6 +730,7 @@ function ekwa_wufoo_form_select_render( $attributes ) {
     $icon_name = !empty( $attributes['iconName'] ) ? $attributes['iconName'] : '';
     $icon_position = !empty( $attributes['iconPosition'] ) ? $attributes['iconPosition'] : 'left';
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -762,7 +798,7 @@ function ekwa_wufoo_form_select_render( $attributes ) {
     $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-select">%s%s%s<select id="%s" name="%s" %s %s %s %s>%s</select>%s%s</div>',
+        '<div class="form-select">%s%s%s<select id="%s" name="%s" %s %s %s %s%s>%s</select>%s%s</div>',
         $label_html,
         $select_wrapper_start,
         $icon_in_select,
@@ -772,6 +808,7 @@ function ekwa_wufoo_form_select_render( $attributes ) {
         $aria_required,
         $aria_describedby,
         $select_style,
+        $custom_attributes_html,
         $options_html,
         $select_wrapper_end,
         $validation_html
@@ -790,6 +827,7 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
     $icon_position = !empty( $attributes['iconPosition'] ) ? $attributes['iconPosition'] : 'above';
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
     $min_characters = isset( $attributes['minCharacters'] ) ? intval( $attributes['minCharacters'] ) : 10;
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -853,7 +891,7 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
     $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     return sprintf(
-        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" rows="%d" %s %s %s %s %s %s></textarea>%s%s</div>',
+        '<div class="form-textarea">%s%s%s<textarea id="%s" name="%s" placeholder="%s" rows="%d" %s %s %s %s %s %s%s></textarea>%s%s</div>',
         $label_html,
         $textarea_wrapper_start,
         $icon_in_textarea,
@@ -867,6 +905,7 @@ function ekwa_wufoo_form_textarea_render( $attributes ) {
         $minlength_attr,
         $min_chars_data,
         $textarea_style,
+        $custom_attributes_html,
         $textarea_wrapper_end,
         $validation_html
     );
@@ -881,6 +920,7 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
     $selected_value = $attributes['selectedValue'];
     $required = $attributes['required'] ? 'required' : '';
     $validation_message = esc_html( $attributes['validationMessage'] );
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -937,7 +977,7 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
 
     return sprintf(
         '<div class="form-radio">
-            <fieldset role="radiogroup" %s %s style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
+            <fieldset role="radiogroup" %s %s%s style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin: 0;">
                 <legend style="padding: 0 10px;">%s%s</legend>
                 %s
             </fieldset>
@@ -945,6 +985,7 @@ function ekwa_wufoo_form_radio_render( $attributes ) {
         </div>',
         $aria_required,
         $aria_describedby,
+        $custom_attributes_html,
         $label,
         $required_indicator,
         $radio_buttons_html,
@@ -1010,6 +1051,7 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
     $validation_message = esc_html( $attributes['validationMessage'] );
     $min_selections = intval( $attributes['minSelections'] );
     $max_selections = intval( $attributes['maxSelections'] );
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -1087,9 +1129,10 @@ function ekwa_wufoo_form_checkbox_group_render( $attributes ) {
     $aria_describedby = ( $attributes['required'] && !empty( $validation_message ) ) ? sprintf('aria-describedby="%s"', $validation_id) : '';
 
     $content_wrapper = sprintf(
-        '<fieldset role="group" %s %s style="%s">%s%s</fieldset>',
+        '<fieldset role="group" %s %s%s style="%s">%s%s</fieldset>',
         $aria_required,
         $aria_describedby,
+        $custom_attributes_html,
         $fieldset_style,
         $legend_html,
         $checkbox_buttons_html
@@ -1119,6 +1162,19 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     $icon_name = !empty( $attributes['iconName'] ) ? $attributes['iconName'] : '';
     $icon_position = !empty( $attributes['iconPosition'] ) ? $attributes['iconPosition'] : 'left';
     $icon_svg_content = !empty( $attributes['iconSvgContent'] ) ? $attributes['iconSvgContent'] : '';
+    $custom_attributes = isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array();
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( $custom_attributes );
+
+    // The datepicker hardcodes autocomplete="off" to avoid clashing with the JS calendar widget,
+    // but a user-supplied autocomplete value (via Custom HTML Attributes) should take precedence.
+    $has_custom_autocomplete = false;
+    foreach ( (array) $custom_attributes as $attr ) {
+        if ( isset( $attr['name'] ) && strtolower( trim( $attr['name'] ) ) === 'autocomplete' ) {
+            $has_custom_autocomplete = true;
+            break;
+        }
+    }
+    $autocomplete_attr = $has_custom_autocomplete ? '' : 'autocomplete="off"';
 
     $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
 
@@ -1203,7 +1259,7 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
             %s
             %s
             %s
-            <input type="text" id="%s" name="%s" class="ekwa-datepicker" %s %s %s %s %s %s placeholder="%s" autocomplete="off" style="%s"%s />
+            <input type="text" id="%s" name="%s" class="ekwa-datepicker" %s %s %s %s %s %s placeholder="%s" %s style="%s"%s%s />
             %s
             %s
         </div>',
@@ -1219,8 +1275,10 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
         $max_attr,
         $value_attr,
         $placeholder,
+        $autocomplete_attr,
         $input_style,
         $data_attributes,
+        $custom_attributes_html,
         $input_wrapper_end,
         $validation_html
     );
@@ -1236,6 +1294,7 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
     $value = !empty( $attributes['value'] ) ? esc_attr( $attributes['value'] ) : 'I Agree';
     $required = $attributes['required'] ? 'required' : '';
     $validation_message = esc_html( $attributes['validationMessage'] );
+    $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
     $validation_id = $field_id . '-error';
     $validation_html = '';
@@ -1262,7 +1321,7 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
     return sprintf(
         '<div class="form-privacy-checkbox">
             <label for="%s" style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4;">
-                <input type="checkbox" id="%s" name="%s" value="%s" %s %s %s style="margin-top: 2px; flex-shrink: 0;" />
+                <input type="checkbox" id="%s" name="%s" value="%s" %s %s %s%s style="margin-top: 2px; flex-shrink: 0;" />
                 <span>%s</span>
             </label>
             %s
@@ -1274,6 +1333,7 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
         $required,
         $aria_required,
         $aria_describedby,
+        $custom_attributes_html,
         $processed_text,
         $validation_html
     );

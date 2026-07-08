@@ -3,12 +3,13 @@ import { TextControl, TextareaControl, SelectControl, ToggleControl } from '@wor
 import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { PanelBody } from '@wordpress/components';
 import { Fragment } from '@wordpress/element';
+import CustomAttributesControl from '../../components/CustomAttributesControl';
 
 const Edit = ({ attributes, setAttributes, isSelected }) => {
     const blockProps = useBlockProps({
         className: `form-radio ${isSelected ? 'is-selected' : ''}`
     });
-    const { label, fieldName, options, optionIds, selectedValue, required, validationMessage } = attributes;
+    const { label, fieldName, options, optionIds, selectedValue, required, validationMessage, customAttributes } = attributes;
 
     const optionsArray = options.split(',').map(option => option.trim()).filter(option => option);
     const idsArray = optionIds.split(',').map(id => id.trim()).filter(id => id);
@@ -83,6 +84,11 @@ const Edit = ({ attributes, setAttributes, isSelected }) => {
                         />
                     )}
                 </PanelBody>
+
+                <CustomAttributesControl
+                    value={customAttributes}
+                    onChange={(value) => setAttributes({ customAttributes: value })}
+                />
             </InspectorControls>
             <div {...blockProps}>
                 <fieldset>
