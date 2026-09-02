@@ -28,7 +28,8 @@
 
 .ekwa-wufoo-form-builder.ekwa-style-minimal .form-input input,
 .ekwa-wufoo-form-builder.ekwa-style-minimal .form-select select,
-.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea {
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-datepicker input {
     padding-left: 0;
     padding-right: 0;
     border-width: 0 0 1px 0;
@@ -37,7 +38,8 @@
 
 .ekwa-wufoo-form-builder.ekwa-style-minimal .form-input input:focus,
 .ekwa-wufoo-form-builder.ekwa-style-minimal .form-select select:focus,
-.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea:focus {
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea:focus,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-datepicker input:focus {
     border-width: 0 0 2px 0;
 }
 

@@ -3,7 +3,7 @@
 /**
  * Plugin Name: EKWA Wufoo Form Builder
  * Description: he EKWA Wufoo Form Builder is a comprehensive WordPress plugin that allows users to create custom forms using a block-based interface.
- * Version: 1.2.6
+ * Version: 1.2.7
  * Author: Sameera Kanchana
  * Author URI: mailto:agskanchana@gmail.com
  * License: GPL2
@@ -1320,11 +1320,14 @@ function ekwa_wufoo_form_datepicker_render( $attributes ) {
     }
     $label_html .= '<span>' . $label . $required_indicator . '</span></label>';
 
-    // Input with icon positioning
-    $input_style = 'width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;';
+    // Input with icon positioning. Sizing/border/radius/color come from the
+    // form-datepicker CSS rules (shared with the other field types via the
+    // --ekwa-input-* variables) rather than being hardcoded here, so the
+    // datepicker follows the form's chosen style like every other field.
+    $input_style = '';
     if ( $icon_html && ($icon_position === 'left' || $icon_position === 'right') ) {
         $padding_side = $icon_position === 'left' ? 'padding-left' : 'padding-right';
-        $input_style = 'width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; ' . $padding_side . ': 35px;';
+        $input_style = $padding_side . ': 35px;';
     }
 
     $input_wrapper_start = '';
@@ -1390,6 +1393,8 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
     $validation_message = esc_html( $attributes['validationMessage'] );
     $custom_attributes_html = ekwa_wufoo_render_custom_attributes( isset( $attributes['customAttributes'] ) ? $attributes['customAttributes'] : array() );
 
+    $required_indicator = $attributes['required'] ? ' <span aria-hidden="true" style="color: red;">*</span><span class="screen-reader-text"> (required)</span>' : '';
+
     $validation_id = $field_id . '-error';
     $validation_html = '';
     if ( $attributes['required'] && !empty( $validation_message ) ) {
@@ -1416,7 +1421,7 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
         '<div class="form-privacy-checkbox">
             <label for="%s" style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4;">
                 <input type="checkbox" id="%s" name="%s" value="%s" %s %s %s%s style="margin-top: 2px; flex-shrink: 0;" />
-                <span>%s</span>
+                <span>%s%s</span>
             </label>
             %s
         </div>',
@@ -1429,6 +1434,7 @@ function ekwa_wufoo_form_privacy_checkbox_render( $attributes ) {
         $aria_describedby,
         $custom_attributes_html,
         $processed_text,
+        $required_indicator,
         $validation_html
     );
 }

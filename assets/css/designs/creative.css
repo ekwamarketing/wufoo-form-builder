@@ -26,7 +26,8 @@
 
 .ekwa-wufoo-form-builder.ekwa-style-creative .form-input input,
 .ekwa-wufoo-form-builder.ekwa-style-creative .form-select select,
-.ekwa-wufoo-form-builder.ekwa-style-creative .form-textarea textarea {
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-textarea textarea,
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-datepicker input {
     padding-left: 18px;
     padding-right: 18px;
 }

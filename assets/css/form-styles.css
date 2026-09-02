@@ -79,7 +79,8 @@
 }
 .ekwa-wufoo-form-builder.ekwa-styled .form-input input,
 .ekwa-wufoo-form-builder.ekwa-styled .form-select select,
-.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea {
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea,
+.ekwa-wufoo-form-builder.ekwa-styled .form-datepicker input {
     width: 100%;
     padding: 0.5rem;
     border: var(--ekwa-input-border-width, 1px) solid var(--ekwa-input-border-color, #ccc);
@@ -181,7 +182,8 @@
 
 .ekwa-wufoo-form-builder.ekwa-styled .form-input input:focus,
 .ekwa-wufoo-form-builder.ekwa-styled .form-select select:focus,
-.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea:focus {
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .form-datepicker input:focus {
     outline: none;
     border-color: var(--ekwa-focus-color, #007cba);
     box-shadow: var(--ekwa-focus-shadow, 0 0 0 1px #007cba);
