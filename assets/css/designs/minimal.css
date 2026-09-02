@@ -1,0 +1,60 @@
+/* Minimal — flat, no card, underlined fields, monochrome */
+.ekwa-wufoo-form-builder.ekwa-style-minimal {
+    --ekwa-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --ekwa-form-bg: transparent;
+    --ekwa-form-border-color: transparent;
+    --ekwa-form-border-width: 0px;
+    --ekwa-form-border-radius: 0px;
+    --ekwa-form-padding: 0px;
+    --ekwa-form-shadow: none;
+    --ekwa-label-color: #6b7280;
+    --ekwa-label-weight: 500;
+    --ekwa-input-bg: transparent;
+    --ekwa-input-text-color: #111827;
+    --ekwa-input-border-color: transparent;
+    --ekwa-input-border-width: 0px;
+    --ekwa-input-radius: 0px;
+    --ekwa-input-height: 42px;
+    --ekwa-focus-color: #111827;
+    --ekwa-focus-shadow: none;
+    --ekwa-fieldset-border-color: #e5e7eb;
+    --ekwa-fieldset-radius: 0px;
+    --ekwa-submit-radius: 0px;
+    --ekwa-submit-shadow: none;
+    --ekwa-submit-transform: uppercase;
+    --ekwa-submit-weight: 600;
+    --ekwa-submit-letter-spacing: 0.08em;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-input input,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-select select,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea {
+    padding-left: 0;
+    padding-right: 0;
+    border-width: 0 0 1px 0;
+    border-color: #d1d5db;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-input input:focus,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-select select:focus,
+.ekwa-wufoo-form-builder.ekwa-style-minimal .form-textarea textarea:focus {
+    border-width: 0 0 2px 0;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .submit-button {
+    background-color: #111827;
+    padding: 12px 26px;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .submit-button:hover {
+    background-color: #000000;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .submit-outline {
+    border-color: #111827;
+    color: #111827 !important;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-minimal .submit-outline:hover {
+    background: #111827 !important;
+}

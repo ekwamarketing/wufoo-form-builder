@@ -1,10 +1,23 @@
-.ekwa-wufoo-form-builder {
+/*
+ * Base structural + skinnable styles, shared by every named form style
+ * (Default, Modern, Minimal, Corporate, Creative). Everything here is scoped
+ * under .ekwa-styled, a class the render callback only adds when the block's
+ * "Form Style" is not "Custom (No CSS)" — so Custom forms never match any
+ * rule in this file (or in assets/css/designs/*.css) and stay bare HTML.
+ *
+ * Colors/borders/radii/shadows are read through var(--ekwa-*, fallback) so a
+ * design file only needs to set the custom properties it wants to change on
+ * .ekwa-wufoo-form-builder.ekwa-style-{name} — the fallback here is the
+ * "Default" look.
+ */
+.ekwa-wufoo-form-builder.ekwa-styled {
     max-width: 600px;
     margin: 0 auto;
+    font-family: var(--ekwa-font-family, inherit);
 }
 
 /* Screen-reader only text — visually hidden but accessible */
-.ekwa-wufoo-form-builder .screen-reader-text {
+.ekwa-wufoo-form-builder.ekwa-styled .screen-reader-text {
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
@@ -16,190 +29,192 @@
     border: 0 !important;
 }
 
-.ekwa-wufoo-form-builder .wp-block-columns-is-layout-flex {
+.ekwa-wufoo-form-builder.ekwa-styled .wp-block-columns-is-layout-flex {
     gap: 1rem;
 }
 
-.ekwa-wufoo-form-builder form {
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background: #fff;
+.ekwa-wufoo-form-builder.ekwa-styled form {
+    padding: var(--ekwa-form-padding, 20px);
+    border: var(--ekwa-form-border-width, 1px) solid var(--ekwa-form-border-color, #ddd);
+    border-radius: var(--ekwa-form-border-radius, 5px);
+    background: var(--ekwa-form-bg, #fff);
+    box-shadow: var(--ekwa-form-shadow, none);
 }
 
-.form-input,
-.form-select,
-.form-textarea,
-.form-checkbox,
-.form-radio,
-.form-privacy-checkbox {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea,
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox,
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio,
+.ekwa-wufoo-form-builder.ekwa-styled .form-privacy-checkbox {
     margin-bottom: 1rem;
     position: relative;
 }
 
-.form-input label,
-.form-select label,
-.form-textarea label {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input label,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select label,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
+    font-weight: var(--ekwa-label-weight, bold);
+    color: var(--ekwa-label-color, #333);
 }
-.form-input input,
-.form-select select,
-.form-datepicker input {
-    height: 40px;
+.ekwa-wufoo-form-builder.ekwa-styled .form-input input,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select,
+.ekwa-wufoo-form-builder.ekwa-styled .form-datepicker input {
+    height: var(--ekwa-input-height, 40px);
     /* Datepicker input isn't covered by the general input rule below, so set
        border-box here too — otherwise its inline padding makes it taller than
-       the other 40px fields. */
+       the other fields. */
     box-sizing: border-box;
 }
- .form-datepicker .ekwawf-input-wrapper input{
+.ekwa-wufoo-form-builder.ekwa-styled .form-datepicker .ekwawf-input-wrapper input {
     padding-left: 35px !important;
- }
-.ekwa-wufoo-form-builder .wp-block-columns{
+}
+.ekwa-wufoo-form-builder.ekwa-styled .wp-block-columns {
     margin: 0 !important;
 }
-.ekwa-wufoo-form-builder .wp-block-column{
+.ekwa-wufoo-form-builder.ekwa-styled .wp-block-column {
     padding: 0 !important;
 }
-.form-input input,
-.form-select select,
-.form-textarea textarea {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input input,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+    border: var(--ekwa-input-border-width, 1px) solid var(--ekwa-input-border-color, #ccc);
+    border-radius: var(--ekwa-input-radius, 4px);
+    font-size: var(--ekwa-input-font-size, 14px);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-color: #fff;
-    color: #333 !important;
+    background-color: var(--ekwa-input-bg, #fff);
+    color: var(--ekwa-input-text-color, #333) !important;
 }
 
 /* Specific iOS select field styling */
-.form-select select {
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select {
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 16px;
     padding-right: 40px !important;
     cursor: pointer;
-    color: #333 !important;
-    -webkit-text-fill-color: #333 !important; /* Force text color on iOS WebKit */
+    color: var(--ekwa-input-text-color, #333) !important;
+    -webkit-text-fill-color: var(--ekwa-input-text-color, #333) !important; /* Force text color on iOS WebKit */
     width: 100% !important;
     max-width: 100% !important;
 }
 
-.form-select select option {
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select option {
     color: #333 !important;
     background-color: #fff !important;
 }
 
 /* Placeholder styling for select */
-.form-select select option:first-child {
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select option:first-child {
     color: #999 !important;
     font-style: italic;
 }
 
-.form-select select:invalid {
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select:invalid {
     color: #999 !important;
     -webkit-text-fill-color: #999 !important;
 }
 
-.form-select select:valid {
-    color: #333 !important;
-    -webkit-text-fill-color: #333 !important;
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select:valid {
+    color: var(--ekwa-input-text-color, #333) !important;
+    -webkit-text-fill-color: var(--ekwa-input-text-color, #333) !important;
 }
 
 /* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
-    .form-select select {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select {
         font-size: 16px !important; /* Prevent zoom on iOS */
-        color: #333 !important;
+        color: var(--ekwa-input-text-color, #333) !important;
         -webkit-appearance: none !important;
         appearance: none !important;
-        background-color: #fff !important;
-        -webkit-text-fill-color: #333 !important; /* Force text color on iOS */
+        background-color: var(--ekwa-input-bg, #fff) !important;
+        -webkit-text-fill-color: var(--ekwa-input-text-color, #333) !important; /* Force text color on iOS */
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
     }
 
-    .form-select select:invalid {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select:invalid {
         color: #999 !important;
         -webkit-text-fill-color: #999 !important;
     }
 
     /* Fix icon positioning when there's a left icon */
-    .form-select .ekwawf-input-wrapper select {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select .ekwawf-input-wrapper select {
         padding-left: 45px !important;
         padding-right: 40px !important;
         width: 100% !important;
     }
 
     /* Adjust icon positioning for better alignment */
-    .form-select .ekwawf-icon-wrapper {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select .ekwawf-icon-wrapper {
         z-index: 2;
         pointer-events: none;
         top: 50%;
         transform: translateY(-50%);
     }
 }/* Additional iOS and mobile browser fixes */
-select::-webkit-input-placeholder {
+.ekwa-wufoo-form-builder.ekwa-styled select::-webkit-input-placeholder {
     color: #999 !important;
 }
 
-select:-moz-placeholder {
+.ekwa-wufoo-form-builder.ekwa-styled select:-moz-placeholder {
     color: #999 !important;
 }
 
-select::-moz-placeholder {
+.ekwa-wufoo-form-builder.ekwa-styled select::-moz-placeholder {
     color: #999 !important;
 }
 
-select:-ms-input-placeholder {
+.ekwa-wufoo-form-builder.ekwa-styled select:-ms-input-placeholder {
     color: #999 !important;
 }
 
-.form-input input:focus,
-.form-select select:focus,
-.form-textarea textarea:focus {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input input:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select select:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea textarea:focus {
     outline: none;
-    border-color: #007cba;
-    box-shadow: 0 0 0 1px #007cba;
+    border-color: var(--ekwa-focus-color, #007cba);
+    box-shadow: var(--ekwa-focus-shadow, 0 0 0 1px #007cba);
 }
 
 /* Error states - More specific and important */
-.form-input.has-error input,
-.form-select.has-error select,
-.form-textarea.has-error textarea,
-.ekwa-datepicker.error {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input.has-error input,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select.has-error select,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea.has-error textarea,
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-datepicker.error {
     border-color: #dc3545 !important;
     box-shadow: 0 0 0 1px #dc3545 !important;
     background-color: #fff5f5;
 }
 
-.form-checkbox.has-error input[type="checkbox"],
-.form-radio.has-error input[type="radio"] {
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox.has-error input[type="checkbox"],
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio.has-error input[type="radio"] {
     outline: 2px solid #dc3545;
     outline-offset: 1px;
 }
 
-.form-radio.has-error fieldset,
-.form-checkbox-group.has-error fieldset {
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio.has-error fieldset,
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox-group.has-error fieldset {
     border-color: #dc3545 !important;
     background-color: #fff5f5;
 }
-.form-checkbox-group,.form-datepicker{
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox-group,
+.ekwa-wufoo-form-builder.ekwa-styled .form-datepicker {
     margin-bottom: 1rem;
 }
 
 /* Validation message styles */
-.validation-message {
+.ekwa-wufoo-form-builder.ekwa-styled .validation-message {
     color: #dc3545 !important;
     font-size: 12px !important;
     margin-top: 4px !important;
@@ -208,13 +223,13 @@ select:-ms-input-placeholder {
     line-height: 1.4;
 }
 
-.has-error .validation-message {
+.ekwa-wufoo-form-builder.ekwa-styled .has-error .validation-message {
     display: block !important;
 }
 
 /* Checkbox and Radio styles */
-.form-checkbox label,
-.form-radio label {
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox label,
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio label {
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -222,101 +237,105 @@ select:-ms-input-placeholder {
     font-weight: normal;
 }
 
-.form-checkbox input[type="checkbox"],
-.form-radio input[type="radio"] {
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox input[type="checkbox"],
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio input[type="radio"] {
     margin-right: 8px;
     width: auto;
     flex-shrink: 0;
 }
 
-.form-radio fieldset {
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio fieldset {
+    border: 1px solid var(--ekwa-fieldset-border-color, #ccc);
+    border-radius: var(--ekwa-fieldset-radius, 4px);
     padding: 15px;
     margin: 0;
     transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
-.ekwa-wufoo-form-builder legend {
+.ekwa-wufoo-form-builder.ekwa-styled legend {
     padding: 0 10px;
-    color: #333;
+    color: var(--ekwa-label-color, #333);
     font-weight: normal !important;
 }
 
 /* Submit button */
-.form-submit {
+.ekwa-wufoo-form-builder.ekwa-styled .form-submit {
     margin-top: 20px;
     text-align: center;
 }
 
-.submit-button {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-button {
     background-color: #007cba;
     color: white;
     padding: 12px 30px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--ekwa-submit-radius, 4px);
     font-size: 16px;
+    font-weight: var(--ekwa-submit-weight, normal);
+    text-transform: var(--ekwa-submit-transform, none);
+    letter-spacing: var(--ekwa-submit-letter-spacing, normal);
+    box-shadow: var(--ekwa-submit-shadow, none);
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Submit button variants */
-.submit-rounded {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-rounded {
     border-radius: 25px;
 }
 
-.submit-square {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-square {
     border-radius: 0;
 }
 
-.submit-outline {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-outline {
     background: transparent !important;
     border: 2px solid #007cba;
     color: #007cba !important;
 }
 
-.submit-outline:hover {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-outline:hover {
     background: #007cba !important;
     color: white !important;
 }
 
-.submit-button:hover {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-button:hover {
     background-color: #005a87;
 }
 
-.submit-button:disabled {
+.ekwa-wufoo-form-builder.ekwa-styled .submit-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
 
 /* Required field indicator */
-.form-input label span,
-.form-select label span,
-.form-textarea label span,
-.form-checkbox label span,
-.form-radio legend span {
+.ekwa-wufoo-form-builder.ekwa-styled .form-input label span,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select label span,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea label span,
+.ekwa-wufoo-form-builder.ekwa-styled .form-checkbox label span,
+.ekwa-wufoo-form-builder.ekwa-styled .form-radio legend span {
     color: #dc3545;
     font-weight: bold;
 }
 
 /* Multiple form instances */
-.ekwa-wufoo-form-builder + .ekwa-wufoo-form-builder {
+.ekwa-wufoo-form-builder.ekwa-styled + .ekwa-wufoo-form-builder.ekwa-styled {
     margin-top: 40px;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .ekwa-wufoo-form-builder {
+    .ekwa-wufoo-form-builder.ekwa-styled {
         margin: 0 10px;
     }
 
-    .ekwa-wufoo-form-builder form {
+    .ekwa-wufoo-form-builder.ekwa-styled form {
         padding: 15px;
     }
 }
 
 /* Animation for error states */
-.has-error .validation-message {
+.ekwa-wufoo-form-builder.ekwa-styled .has-error .validation-message {
     animation: slideDown 0.3s ease-out;
 }
 
@@ -332,18 +351,18 @@ select:-ms-input-placeholder {
 }
 
 /* Focus states for error fields */
-.form-input.has-error input:focus,
-.form-select.has-error select:focus,
-.form-textarea.has-error textarea:focus,
-.ekwa-datepicker.error:focus
+.ekwa-wufoo-form-builder.ekwa-styled .form-input.has-error input:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .form-select.has-error select:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .form-textarea.has-error textarea:focus,
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-datepicker.error:focus
  {
     border-color: #dc3545 !important;
     box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2) !important;
 }
-.ekwa-wufoo-form-builder label {
+.ekwa-wufoo-form-builder.ekwa-styled label {
     font-weight:  normal !important;
 }
-.ekwawf-icon-wrapper{
+.ekwa-wufoo-form-builder.ekwa-styled .ekwawf-icon-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -356,13 +375,13 @@ select:-ms-input-placeholder {
 }
 
 /* Specific positioning for select fields */
-.form-select .ekwawf-icon-wrapper {
+.ekwa-wufoo-form-builder.ekwa-styled .form-select .ekwawf-icon-wrapper {
     background-color: transparent;
 }
 
 /* Mobile and iOS specific improvements */
 @media (max-width: 768px) {
-    .form-select select {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select {
         font-size: 16px !important; /* Prevent zoom */
         width: 100% !important;
         max-width: 100% !important;
@@ -370,23 +389,23 @@ select:-ms-input-placeholder {
         box-sizing: border-box !important;
     }
 
-    .form-select select:invalid {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select:invalid {
         color: #999 !important;
         -webkit-text-fill-color: #999 !important;
     }
 
-    .form-select select:valid {
-        color: #333 !important;
-        -webkit-text-fill-color: #333 !important;
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select:valid {
+        color: var(--ekwa-input-text-color, #333) !important;
+        -webkit-text-fill-color: var(--ekwa-input-text-color, #333) !important;
     }
 
     /* Better spacing for mobile touch targets */
-    .form-select .ekwawf-input-wrapper {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select .ekwawf-input-wrapper {
         min-height: 44px; /* iOS recommended touch target */
         width: 100% !important;
     }
 
-    .form-select select {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-select select {
         min-height: 44px;
         line-height: 1.2;
     }
@@ -394,9 +413,9 @@ select:-ms-input-placeholder {
 
 /* Datepicker mobile responsive styles for screens smaller than 545px */
 @media (max-width: 545px) {
-    .form-datepicker input,
-    .form-datepicker .flatpickr-input,
-    .form-datepicker input.ekwa-datepicker {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-datepicker input,
+    .ekwa-wufoo-form-builder.ekwa-styled .form-datepicker .flatpickr-input,
+    .ekwa-wufoo-form-builder.ekwa-styled .form-datepicker input.ekwa-datepicker {
         width: 100% !important;
         min-width: 0 !important;
         flex: 1 1 auto !important;
@@ -404,13 +423,13 @@ select:-ms-input-placeholder {
         box-sizing: border-box !important;
     }
 
-    .form-datepicker {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-datepicker {
         width: 100% !important;
         display: block !important;
     }
 
     /* Ensure wrapper doesn't restrict width */
-    .form-datepicker .ekwawf-input-wrapper {
+    .ekwa-wufoo-form-builder.ekwa-styled .form-datepicker .ekwawf-input-wrapper {
         width: 100% !important;
         max-width: 100% !important;
         display: block !important;
@@ -420,22 +439,22 @@ select:-ms-input-placeholder {
 /* ==========================================
    reCAPTCHA Styles
    ========================================== */
-.ekwa-recaptcha-wrapper {
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-recaptcha-wrapper {
     margin-bottom: 16px;
 }
 
-.ekwa-recaptcha-wrapper .g-recaptcha {
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-recaptcha-wrapper .g-recaptcha {
     display: inline-block;
 }
 
-.ekwa-recaptcha-wrapper .g-recaptcha.recaptcha-invalid {
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-recaptcha-wrapper .g-recaptcha.recaptcha-invalid {
     border: 2px solid #d94f4f;
     border-radius: 4px;
     padding: 2px;
     animation: recaptcha-shake 0.5s ease-in-out;
 }
 
-.ekwa-recaptcha-wrapper .recaptcha-error {
+.ekwa-wufoo-form-builder.ekwa-styled .ekwa-recaptcha-wrapper .recaptcha-error {
     color: #d94f4f;
     font-size: 12px;
     margin-top: 4px;

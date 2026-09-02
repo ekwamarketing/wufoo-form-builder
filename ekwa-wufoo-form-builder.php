@@ -113,6 +113,78 @@ function ekwa_wufoo_blocks_have_recaptcha( $blocks ) {
     return false;
 }
 
+/**
+ * The set of "Form Style" values known to ship a CSS skin in
+ * assets/css/designs/. "default" is included for symmetry even though its
+ * file is intentionally empty — the base stylesheet's var() fallbacks already
+ * render the Default look.
+ */
+function ekwa_wufoo_known_form_styles() {
+    return array( 'default', 'modern', 'minimal', 'corporate', 'creative' );
+}
+
+/**
+ * Recursively collect the distinct formStyle values used by form-builder
+ * blocks in $blocks. Missing/empty formStyle attrs count as 'default'.
+ */
+function ekwa_wufoo_collect_form_styles( $blocks ) {
+    $styles = array();
+    foreach ( $blocks as $block ) {
+        if ( isset( $block['blockName'] ) && 'ekwa-wufoo/form-builder' === $block['blockName'] ) {
+            $style = ! empty( $block['attrs']['formStyle'] ) ? $block['attrs']['formStyle'] : 'default';
+            $styles[ $style ] = true;
+        }
+        if ( ! empty( $block['innerBlocks'] ) ) {
+            $styles += ekwa_wufoo_collect_form_styles( $block['innerBlocks'] );
+        }
+    }
+    return $styles;
+}
+
+/**
+ * The formStyle values used by form-builder blocks on the current post.
+ * Returns an empty array when the post/blocks can't be scanned (e.g.
+ * conditional loading is off and the form isn't in post_content) — callers
+ * should treat that as "unknown" and fall back to loading everything, same
+ * as before per-style CSS existed.
+ */
+function ekwa_wufoo_page_form_styles() {
+    $post = get_post();
+    if ( ! $post || empty( $post->post_content ) || ! has_blocks( $post->post_content ) ) {
+        return array();
+    }
+    return ekwa_wufoo_collect_form_styles( parse_blocks( $post->post_content ) );
+}
+
+/**
+ * Whether the base form CSS (assets/css/form-styles.css) should load: true
+ * unless every form-builder block we found on the page uses "Custom (No
+ * CSS)" — that style intentionally gets none of our CSS at all.
+ */
+function ekwa_wufoo_page_needs_base_form_css( $page_form_styles ) {
+    if ( empty( $page_form_styles ) ) {
+        return true;
+    }
+    foreach ( $page_form_styles as $style => $_unused ) {
+        if ( 'custom' !== $style ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Which design skin files (assets/css/designs/*.css) are actually in use on
+ * the page. Falls back to "all of them" when the page couldn't be scanned.
+ */
+function ekwa_wufoo_page_active_designs( $page_form_styles ) {
+    $known = ekwa_wufoo_known_form_styles();
+    if ( empty( $page_form_styles ) ) {
+        return $known;
+    }
+    return array_values( array_intersect( $known, array_keys( $page_form_styles ) ) );
+}
+
 // Enqueue shared styles for the BLOCK EDITOR only.
 // On the frontend these styles are inlined (see ekwa_wufoo_form_builder_frontend_assets).
 function ekwa_wufoo_form_builder_shared_assets() {
@@ -219,11 +291,20 @@ function ekwa_wufoo_form_builder_frontend_assets() {
         return;
     }
 
-    // ── Inline CSS (style.css + form-styles.css) ───────────────────────────
+    // ── Inline CSS (style.css + form-styles.css + design skins) ────────────
     // Datepicker CSS is intentionally excluded; it is injected on first user
     // interaction by the datepicker loader below.
-    $inline_css = ekwa_wufoo_read_asset( 'build/style.css' )
-        . "\n" . ekwa_wufoo_read_asset( 'assets/css/form-styles.css' );
+    $page_form_styles = ekwa_wufoo_page_form_styles();
+    $inline_css = ekwa_wufoo_read_asset( 'build/style.css' );
+
+    // "Custom (No CSS)" forms get none of our CSS — skip the base stylesheet
+    // and every design skin when that's the only style in use on the page.
+    if ( ekwa_wufoo_page_needs_base_form_css( $page_form_styles ) ) {
+        $inline_css .= "\n" . ekwa_wufoo_read_asset( 'assets/css/form-styles.css' );
+        foreach ( ekwa_wufoo_page_active_designs( $page_form_styles ) as $design ) {
+            $inline_css .= "\n" . ekwa_wufoo_read_asset( "assets/css/designs/{$design}.css" );
+        }
+    }
 
     if ( trim( $inline_css ) !== '' ) {
         // A src-less handle lets WordPress print our inline CSS in the <head>.
@@ -309,6 +390,10 @@ function ekwa_wufoo_form_builder_register_blocks() {
             'submitButtonAlignment' => array(
                 'type' => 'string',
                 'default' => 'left'
+            ),
+            'formStyle' => array(
+                'type' => 'string',
+                'default' => 'default'
             ),
             'enableRecaptcha' => array(
                 'type' => 'boolean',
@@ -513,6 +598,14 @@ function ekwa_wufoo_form_builder_render( $attributes, $content ) {
     $submit_button_text_color = !empty( $attributes['submitButtonTextColor'] ) ? esc_attr( $attributes['submitButtonTextColor'] ) : '#ffffff';
     $submit_button_alignment = !empty( $attributes['submitButtonAlignment'] ) ? esc_attr( $attributes['submitButtonAlignment'] ) : 'left';
     $enable_recaptcha = !empty( $attributes['enableRecaptcha'] ) ? $attributes['enableRecaptcha'] : false;
+    $form_style = !empty( $attributes['formStyle'] ) ? sanitize_html_class( $attributes['formStyle'] ) : 'default';
+
+    // "Custom (No CSS)" gets no styling class at all — none of our CSS (base
+    // or design skins) targets a bare .ekwa-wufoo-form-builder, so the form
+    // renders as plain, unstyled HTML for the site owner to skin themselves.
+    $wrapper_style_class = ( 'custom' === $form_style )
+        ? 'ekwa-style-custom'
+        : 'ekwa-styled ekwa-style-' . $form_style;
 
     // Set action URL based on reCAPTCHA status
     $default_ekwa_url = $enable_recaptcha 
@@ -569,7 +662,8 @@ function ekwa_wufoo_form_builder_render( $attributes, $content ) {
     $honeypot_html = '<div style="position: absolute; left: -9999px; top: -9999px;" aria-hidden="true"><label for="website_url_' . $form_id . '">Website</label><input type="text" name="website_url" id="website_url_' . $form_id . '" tabindex="-1" autocomplete="off" value=""></div>';
 
     return sprintf(
-        '<div class="ekwa-wufoo-form-builder" data-recaptcha="%s"><form id="%s" name="%s" method="post" action="%s" novalidate>%s%s%s<div class="form-submit" style="text-align: %s;"><button type="submit" class="submit-button primary submit-%s" style="background-color: %s; color: %s; border-color: %s;" aria-label="%s">%s</button></div>%s%s%s</form></div>',
+        '<div class="ekwa-wufoo-form-builder %s" data-recaptcha="%s"><form id="%s" name="%s" method="post" action="%s" novalidate>%s%s%s<div class="form-submit" style="text-align: %s;"><button type="submit" class="submit-button primary submit-%s" style="background-color: %s; color: %s; border-color: %s;" aria-label="%s">%s</button></div>%s%s%s</form></div>',
+        $wrapper_style_class,
         $enable_recaptcha ? 'true' : 'false',
         $form_id,
         $form_id,

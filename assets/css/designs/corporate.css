@@ -1,0 +1,48 @@
+/* Corporate — formal navy accent, sharp corners, top border accent */
+.ekwa-wufoo-form-builder.ekwa-style-corporate {
+    --ekwa-font-family: Arial, Helvetica, sans-serif;
+    --ekwa-form-bg: #ffffff;
+    --ekwa-form-border-color: #d1d5db;
+    --ekwa-form-border-width: 1px;
+    --ekwa-form-border-radius: 2px;
+    --ekwa-form-padding: 28px;
+    --ekwa-form-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --ekwa-label-color: #1f2937;
+    --ekwa-label-weight: 700;
+    --ekwa-input-bg: #ffffff;
+    --ekwa-input-text-color: #1f2937;
+    --ekwa-input-border-color: #9ca3af;
+    --ekwa-input-border-width: 1px;
+    --ekwa-input-radius: 2px;
+    --ekwa-input-height: 40px;
+    --ekwa-focus-color: #1f3a5f;
+    --ekwa-focus-shadow: 0 0 0 1px #1f3a5f;
+    --ekwa-fieldset-border-color: #9ca3af;
+    --ekwa-fieldset-radius: 2px;
+    --ekwa-submit-radius: 2px;
+    --ekwa-submit-shadow: none;
+    --ekwa-submit-transform: uppercase;
+    --ekwa-submit-weight: 700;
+    --ekwa-submit-letter-spacing: 0.04em;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-corporate form {
+    border-top: 4px solid #1f3a5f;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-corporate .submit-button {
+    background-color: #1f3a5f;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-corporate .submit-button:hover {
+    background-color: #16283f;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-corporate .submit-outline {
+    border-color: #1f3a5f;
+    color: #1f3a5f !important;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-corporate .submit-outline:hover {
+    background: #1f3a5f !important;
+}

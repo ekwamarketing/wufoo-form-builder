@@ -176,6 +176,10 @@ registerBlockType('ekwa-wufoo/form-builder', {
             type: 'string',
             default: 'left'
         },
+        formStyle: {
+            type: 'string',
+            default: 'default'
+        },
         selectedTemplate: {
             type: 'string',
             default: ''
@@ -193,12 +197,17 @@ registerBlockType('ekwa-wufoo/form-builder', {
         html: false
     },
     edit: ({ attributes, setAttributes, clientId }) => {
+        const { formId, submitText, actionUrl, ekwaUrl, idStamp, submitButtonStyle, submitButtonColor, submitButtonTextColor, submitButtonAlignment, formStyle, selectedTemplate, hasContent, enableRecaptcha } = attributes;
+
+        const wrapperStyleClass = formStyle === 'custom'
+            ? 'ekwa-style-custom'
+            : `ekwa-styled ekwa-style-${formStyle || 'default'}`;
+
         const blockProps = useBlockProps({
-            className: 'ekwa-wufoo-form-builder'
+            className: `ekwa-wufoo-form-builder ${wrapperStyleClass}`
         });
 
         const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-        const { formId, submitText, actionUrl, ekwaUrl, idStamp, submitButtonStyle, submitButtonColor, submitButtonTextColor, submitButtonAlignment, selectedTemplate, hasContent, enableRecaptcha } = attributes;
 
         // Check if block has inner blocks when component mounts
         useEffect(() => {
@@ -346,6 +355,22 @@ registerBlockType('ekwa-wufoo/form-builder', {
                     </PanelBody>
 
                     <PanelBody title={__('Form Settings', 'ekwa-wufoo-form-builder')}>
+                        <SelectControl
+                            label={__('Form Style', 'ekwa-wufoo-form-builder')}
+                            value={formStyle}
+                            onChange={(value) => setAttributes({ formStyle: value })}
+                            options={[
+                                { label: __('Default', 'ekwa-wufoo-form-builder'), value: 'default' },
+                                { label: __('Modern', 'ekwa-wufoo-form-builder'), value: 'modern' },
+                                { label: __('Minimal', 'ekwa-wufoo-form-builder'), value: 'minimal' },
+                                { label: __('Corporate', 'ekwa-wufoo-form-builder'), value: 'corporate' },
+                                { label: __('Creative', 'ekwa-wufoo-form-builder'), value: 'creative' },
+                                { label: __('Custom (No CSS)', 'ekwa-wufoo-form-builder'), value: 'custom' }
+                            ]}
+                            help={formStyle === 'custom'
+                                ? __('No plugin CSS is loaded for this form at all — bare, unstyled HTML that you style yourself.', 'ekwa-wufoo-form-builder')
+                                : __('Choose the overall visual style for this form.', 'ekwa-wufoo-form-builder')}
+                        />
                         <TextControl
                             label={__('Form ID', 'ekwa-wufoo-form-builder')}
                             value={formId}

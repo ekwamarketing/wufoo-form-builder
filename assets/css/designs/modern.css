@@ -1,0 +1,43 @@
+/* Modern — soft elevated card, rounded fields, indigo accent */
+.ekwa-wufoo-form-builder.ekwa-style-modern {
+    --ekwa-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --ekwa-form-bg: #ffffff;
+    --ekwa-form-border-color: #eef0f4;
+    --ekwa-form-border-width: 1px;
+    --ekwa-form-border-radius: 16px;
+    --ekwa-form-padding: 32px;
+    --ekwa-form-shadow: 0 10px 40px rgba(17, 24, 39, 0.08);
+    --ekwa-label-color: #1f2937;
+    --ekwa-label-weight: 600;
+    --ekwa-input-bg: #f9fafb;
+    --ekwa-input-text-color: #111827;
+    --ekwa-input-border-color: #e5e7eb;
+    --ekwa-input-border-width: 1px;
+    --ekwa-input-radius: 10px;
+    --ekwa-input-height: 46px;
+    --ekwa-input-font-size: 15px;
+    --ekwa-focus-color: #6366f1;
+    --ekwa-focus-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    --ekwa-fieldset-border-color: #e5e7eb;
+    --ekwa-fieldset-radius: 10px;
+    --ekwa-submit-radius: 10px;
+    --ekwa-submit-shadow: 0 8px 20px rgba(99, 102, 241, 0.28);
+    --ekwa-submit-weight: 600;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-modern .submit-button {
+    background-color: #6366f1;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-modern .submit-button:hover {
+    background-color: #4f46e5;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-modern .submit-outline {
+    border-color: #6366f1;
+    color: #6366f1 !important;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-modern .submit-outline:hover {
+    background: #6366f1 !important;
+}

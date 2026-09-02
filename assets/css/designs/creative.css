@@ -1,0 +1,53 @@
+/* Creative — bold, pill-shaped fields, warm accent, playful shadow */
+.ekwa-wufoo-form-builder.ekwa-style-creative {
+    --ekwa-font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    --ekwa-form-bg: #fffaf5;
+    --ekwa-form-border-color: transparent;
+    --ekwa-form-border-width: 0px;
+    --ekwa-form-border-radius: 24px;
+    --ekwa-form-padding: 32px;
+    --ekwa-form-shadow: 0 12px 30px rgba(249, 115, 22, 0.15);
+    --ekwa-label-color: #9a3412;
+    --ekwa-label-weight: 700;
+    --ekwa-input-bg: #ffffff;
+    --ekwa-input-text-color: #431407;
+    --ekwa-input-border-color: #fed7aa;
+    --ekwa-input-border-width: 2px;
+    --ekwa-input-radius: 999px;
+    --ekwa-input-height: 46px;
+    --ekwa-focus-color: #f97316;
+    --ekwa-focus-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+    --ekwa-fieldset-border-color: #fed7aa;
+    --ekwa-fieldset-radius: 20px;
+    --ekwa-submit-radius: 999px;
+    --ekwa-submit-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
+    --ekwa-submit-weight: 700;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-input input,
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-select select,
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-textarea textarea {
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .form-textarea textarea {
+    border-radius: 20px;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .submit-button {
+    background-color: #f97316;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .submit-button:hover {
+    background-color: #ea580c;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .submit-outline {
+    border-color: #f97316;
+    color: #f97316 !important;
+}
+
+.ekwa-wufoo-form-builder.ekwa-style-creative .submit-outline:hover {
+    background: #f97316 !important;
+}
